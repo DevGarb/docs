@@ -1,0 +1,1719 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Integração ServiceERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground:      #F5F7F7;
+    --surface:     #FFFFFF;
+    --surface-alt: #EDF1F1;
+    --line:        #D3DBDC;
+    --line-soft:   #E4EAEA;
+    --ink:         #10171A;
+    --ink-mid:     #47565D;
+    --ink-soft:    #6B7C84;
+    --accent:      #A2551A;
+    --accent-soft: #F0E2D5;
+
+    --ok:         #17694A;
+    --ok-bg:      #DFEDE6;
+    --warn:       #8A6410;
+    --warn-bg:    #F3E9D2;
+    --crit:       #A33526;
+    --crit-bg:    #F4DFDB;
+    --neutral:    #566268;
+    --neutral-bg: #E5E9EA;
+
+    --sans:  "Poppins", sans-serif;
+    --serif: "Poppins", sans-serif;
+    --mono:  "Poppins", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0D1214;
+      --surface:     #151B1E;
+      --surface-alt: #1B2327;
+      --line:        #2A343A;
+      --line-soft:   #212A2E;
+      --ink:         #E7ECED;
+      --ink-mid:     #A5B3B9;
+      --ink-soft:    #7E8D94;
+      --accent:      #D8874A;
+      --accent-soft: #33241A;
+
+      --ok:         #6BC49A;
+      --ok-bg:      #163026;
+      --warn:       #D9B15E;
+      --warn-bg:    #322915;
+      --crit:       #E28C7E;
+      --crit-bg:    #35201D;
+      --neutral:    #94A3A9;
+      --neutral-bg: #222B2F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0D1214;
+    --surface:     #151B1E;
+    --surface-alt: #1B2327;
+    --line:        #2A343A;
+    --line-soft:   #212A2E;
+    --ink:         #E7ECED;
+    --ink-mid:     #A5B3B9;
+    --ink-soft:    #7E8D94;
+    --accent:      #D8874A;
+    --accent-soft: #33241A;
+
+    --ok:         #6BC49A;
+    --ok-bg:      #163026;
+    --warn:       #D9B15E;
+    --warn-bg:    #322915;
+    --crit:       #E28C7E;
+    --crit-bg:    #35201D;
+    --neutral:    #94A3A9;
+    --neutral-bg: #222B2F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 1140px; margin: 0 auto; padding: 0 28px 96px; }
+
+  /* ---------- cabeçalho ---------- */
+
+  header.masthead { padding: 58px 0 0; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 4.6vw, 3.05rem);
+    line-height: 1.08;
+    letter-spacing: -.021em;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+
+  .lede {
+    font-size: 1.075rem;
+    line-height: 1.6;
+    color: var(--ink-mid);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  table, .metric-value, .status-strip, code {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .status-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 26px;
+    margin-top: 28px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .status-strip b { color: var(--ink); font-weight: 500; }
+
+  /* ---------- alternador de visão ---------- */
+
+  .views {
+    display: flex;
+    gap: 26px;
+    margin-top: 34px;
+    border-bottom: 1px solid var(--line);
+  }
+  .views button {
+    appearance: none;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 9px 0 11px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .views button:hover { color: var(--ink); }
+  .views button[aria-selected="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+  .views button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- layout ---------- */
+
+  .shell {
+    display: grid;
+    grid-template-columns: 194px minmax(0, 1fr);
+    gap: 60px;
+    align-items: start;
+  }
+
+  nav.toc { position: sticky; top: 26px; padding-top: 46px; font-size: 13.5px; }
+  nav.toc p {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+  }
+  nav.toc ol {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  nav.toc a {
+    display: block;
+    padding: 4px 0 4px 10px;
+    color: var(--ink-mid);
+    text-decoration: none;
+    border-left: 2px solid var(--line);
+    transition: color .15s, border-color .15s;
+  }
+  nav.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  main { padding-top: 46px; min-width: 0; }
+
+  section { margin-bottom: 66px; scroll-margin-top: 24px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.62rem;
+    letter-spacing: -.014em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 36px 0 10px;
+  }
+
+  .section-note { color: var(--ink-mid); max-width: 66ch; margin: 0 0 26px; }
+
+  p { max-width: 66ch; }
+  a { color: var(--accent); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .875em;
+    background: var(--surface-alt);
+    border-radius: 3px;
+    padding: .12em .38em;
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 12.9px;
+    line-height: 1.75;
+    font-variant-numeric: tabular-nums;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 18px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .tok-key { color: var(--accent); }
+  .tok-str { color: var(--ok); }
+  .tok-num { color: var(--ink-mid); }
+  .tok-com { color: var(--ink-soft); font-style: italic; }
+
+  /* ---------- diagrama ---------- */
+
+  .flow {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px 20px 18px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .flow svg { display: block; min-width: 620px; width: 100%; height: auto; }
+
+  /* ---------- tabelas ---------- */
+
+  .table-wrap { overflow-x: auto; margin-bottom: 20px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.6px; }
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 0 14px 9px 0;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 11px 14px 11px 0;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--ink-mid);
+  }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 2.5px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .pill.ok      { color: var(--ok);      background: var(--ok-bg); }
+  .pill.warn    { color: var(--warn);    background: var(--warn-bg); }
+  .pill.crit    { color: var(--crit);    background: var(--crit-bg); }
+  .pill.neutral { color: var(--neutral); background: var(--neutral-bg); }
+
+  /* ---------- métodos ---------- */
+
+  .method { border-top: 2px solid var(--ink); padding-top: 16px; margin-bottom: 40px; }
+  .method-name { font-family: var(--mono); font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  .method-desc { color: var(--ink-mid); margin: 0 0 18px; max-width: 66ch; }
+
+  dl.params {
+    display: grid;
+    grid-template-columns: minmax(140px, auto) 1fr;
+    gap: 9px 20px;
+    margin: 0 0 20px;
+    font-size: 13.6px;
+    align-items: baseline;
+  }
+  dl.params dt { font-family: var(--mono); font-size: 12.6px; color: var(--ink); }
+  dl.params dd { margin: 0; color: var(--ink-mid); }
+  .req {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-left: 6px;
+  }
+
+  /* ---------- destaques ---------- */
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: 15px 18px;
+    margin: 0 0 22px;
+    font-size: 14.2px;
+  }
+  .callout p { margin: 0; max-width: 64ch; }
+  .callout p + p { margin-top: 9px; }
+  .callout.warn { border-left-color: var(--crit); }
+
+  .field-list { display: grid; gap: 0; margin: 0 0 22px; font-size: 13.8px; }
+  .field-row {
+    display: grid;
+    grid-template-columns: minmax(112px, auto) 1fr;
+    gap: 18px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: baseline;
+  }
+  .field-row:last-child { border-bottom: none; }
+  .field-row span:first-child { font-family: var(--mono); font-size: 12.6px; }
+  .field-row span:last-child { color: var(--ink-mid); }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+  .metric { background: var(--surface); padding: 15px 17px; }
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 5px;
+  }
+  .metric-value {
+    font-family: var(--mono);
+    font-size: 1.28rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    margin: 0;
+  }
+  .metric-value em { font-style: normal; font-size: .78rem; color: var(--ink-soft); }
+
+  /* ---------- montador de requisição ---------- */
+
+  .builder {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 26px;
+  }
+
+  .builder-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 16px;
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-alt);
+  }
+  .builder-head strong { font-size: 13.5px; font-weight: 600; }
+  .builder-head span {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+
+  .builder-body {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  }
+
+  .builder-form {
+    padding: 18px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+  }
+  .field .hint {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .field input[type="text"],
+  .field select {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 7px 9px;
+  }
+  .field input[type="text"]:focus,
+  .field select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-mid);
+    cursor: pointer;
+  }
+  .check input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+  .builder-out { display: flex; flex-direction: column; min-width: 0; }
+
+  .langs {
+    display: flex;
+    gap: 2px;
+    padding: 10px 14px 0;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .langs button {
+    appearance: none;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 6px 10px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .langs button:hover { color: var(--ink); }
+  .langs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .langs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .out-wrap { position: relative; flex: 1; min-width: 0; }
+  .out-wrap pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--surface);
+    height: 100%;
+    min-height: 232px;
+  }
+
+  .copy {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    appearance: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mid);
+    background: var(--ground);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 4px 9px;
+    cursor: pointer;
+  }
+  .copy:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .endpoint-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 13.5px;
+  }
+  .endpoint-row:last-child { border-bottom: none; }
+  .endpoint-row code { word-break: break-all; }
+
+  footer.foot {
+    border-top: 1px solid var(--line);
+    padding-top: 22px;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  footer.foot p { max-width: 66ch; }
+
+  @media (max-width: 1000px) {
+    .builder-body { grid-template-columns: 1fr; }
+    .builder-form { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: 1fr; gap: 0; }
+    nav.toc {
+      position: static;
+      padding: 30px 0 22px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    nav.toc ol { flex-direction: row; flex-wrap: wrap; gap: 4px 18px; }
+    nav.toc a { border-left: none; padding-left: 0; }
+    main { padding-top: 34px; }
+    header.masthead { padding-top: 42px; }
+    dl.params { grid-template-columns: 1fr; gap: 3px; }
+    dl.params dd { margin-bottom: 10px; }
+    .views { gap: 18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">integration_app_db · v1.0.0</p>
+    <h1>Integração ServiceERP</h1>
+    <p class="lede">
+      Endpoint HTTP que recebe um documento ou uma placa, consulta o banco do ServiceERP
+      e devolve o resultado na mesma requisição. Somente leitura, autenticado por chave,
+      com resposta previsível mesmo quando o banco está fora do ar.
+    </p>
+    <div class="status-strip">
+      <span>Protocolo <b>JSON-RPC 2.0 sobre HTTPS</b></span>
+      <span>Acesso <b>somente leitura</b></span>
+      <span>Resposta <b>síncrona</b></span>
+    </div>
+
+    <div class="views" role="tablist" aria-label="Seções da documentação">
+      <button type="button" role="tab" id="tab-api" aria-controls="view-api" aria-selected="true">Referência da API</button>
+      <button type="button" role="tab" id="tab-tec" aria-controls="view-tec" aria-selected="false">Arquitetura e operação</button>
+    </div>
+  </header>
+
+  <!-- =================================================================== -->
+  <!--  VISÃO 1 — REFERÊNCIA DA API (para quem vai integrar)              -->
+  <!-- =================================================================== -->
+
+  <div class="shell" id="view-api" role="tabpanel" aria-labelledby="tab-api">
+
+    <nav class="toc">
+      <p>Referência</p>
+      <ol>
+        <li><a href="#inicio">Primeira chamada</a></li>
+        <li><a href="#endpoints">Endereços</a></li>
+        <li><a href="#autenticacao">Autenticação</a></li>
+        <li><a href="#requisicao">Requisição</a></li>
+        <li><a href="#montador">Montar chamada</a></li>
+        <li><a href="#resposta">Resposta</a></li>
+        <li><a href="#erros">Erros</a></li>
+        <li><a href="#catalogo">Métodos</a></li>
+        <li><a href="#consumo">Sua chave</a></li>
+        <li><a href="#integrar">Guia de integração</a></li>
+        <li><a href="#limites">Limites</a></li>
+      </ol>
+    </nav>
+
+    <main>
+
+      <!-- ---------- primeira chamada ---------- -->
+      <section id="inicio">
+        <h2>Primeira chamada</h2>
+        <p class="section-note">
+          Três coisas bastam para começar: o endereço, a chave que você recebeu e o nome do
+          método. Cole no terminal, trocando a chave e o documento.
+        </p>
+
+<pre><code>curl -X POST https://api-db.gpsceara.shop/rpc \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: SUA_CHAVE" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"historicoFinanceiro","params":{"documento":"123.456.789-00"}}'</code></pre>
+
+        <p>
+          Se a chave estiver correta e o documento existir, a resposta traz
+          <code>"status": "ok"</code> e o histórico no campo <code>result</code>. Para conferir
+          que o serviço está no ar antes de qualquer coisa, <code>GET /health</code> responde
+          sem exigir chave.
+        </p>
+      </section>
+
+      <!-- ---------- endereços ---------- -->
+      <section id="endpoints">
+        <h2>Endereços</h2>
+        <p class="section-note">
+          O endereço depende de onde o seu sistema roda. Todos servem os mesmos métodos.
+        </p>
+
+        <div class="endpoint-row">
+          <span class="pill ok">ativo</span>
+          <code>https://api-db.gpsceara.shop/rpc</code>
+          <span style="color: var(--ink-soft); font-size: 12.5px;">HTTPS</span>
+        </div>
+
+        <p style="margin-top: 20px;">
+          Todas as chamadas usam HTTPS. Requisições em texto claro não são atendidas.
+        </p>
+      </section>
+
+      <!-- ---------- autenticação ---------- -->
+      <section id="autenticacao">
+        <h2>Autenticação</h2>
+        <p class="section-note">
+          Chave no cabeçalho <code>X-API-Key</code>. Sem OAuth e sem token de sessão — a mesma
+          chave vale para todas as chamadas, até o vencimento.
+        </p>
+
+<pre><code>X-API-Key: sua-chave</code></pre>
+
+        <div class="field-list">
+          <div class="field-row">
+            <span>Uma por parceiro</span>
+            <span>Cada integração recebe a sua. Isso permite revogar uma sem afetar as demais.</span>
+          </div>
+          <div class="field-row">
+            <span>Não expor</span>
+            <span>A chave dá acesso a dados cadastrais e financeiros de clientes. Guarde em variável de ambiente ou cofre de segredos — nunca no código-fonte, no front-end ou em repositório.</span>
+          </div>
+          <div class="field-row">
+            <span>Rotação</span>
+            <span>Em caso de suspeita de vazamento, solicite uma chave nova. A antiga é invalidada na hora.</span>
+          </div>
+          <div class="field-row">
+            <span>Limites por chave</span>
+            <span>Cada chave tem limites próprios, definidos em contrato. As respostas trazem quanto resta da janela; ao estourar, vem <code>429</code> com <code>Retry-After</code>.</span>
+          </div>
+          <div class="field-row">
+            <span>Rotas abertas</span>
+            <span><code>/health</code> e <code>/ping</code> não exigem chave — servem para monitoração externa.</span>
+          </div>
+        </div>
+
+        <p>
+          Chave ausente, inválida, vencida ou revogada devolve
+          <span class="pill crit">unauthorized</span> com HTTP 401.
+        </p>
+      </section>
+
+      <!-- ---------- requisição ---------- -->
+      <section id="requisicao">
+        <h2>Requisição</h2>
+        <p class="section-note">
+          Sempre <code>POST</code>, sempre em <code>/rpc</code>, sempre com o mesmo formato de
+          corpo. O que muda entre uma consulta e outra é o <code>method</code> e o conteúdo de
+          <code>params</code>.
+        </p>
+
+<pre><code>{
+  <span class="tok-key">"jsonrpc"</span>: <span class="tok-str">"2.0"</span>,        <span class="tok-com">// fixo</span>
+  <span class="tok-key">"id"</span>: <span class="tok-num">1</span>,                 <span class="tok-com">// livre; volta igual na resposta</span>
+  <span class="tok-key">"method"</span>: <span class="tok-str">"historicoFinanceiro"</span>,
+  <span class="tok-key">"params"</span>: { <span class="tok-key">"documento"</span>: <span class="tok-str">"123.456.789-00"</span> }
+}</code></pre>
+
+        <div class="field-list">
+          <div class="field-row"><span>jsonrpc</span><span>Sempre <code>"2.0"</code>. Aceito como constante.</span></div>
+          <div class="field-row"><span>id</span><span>Número ou texto à sua escolha, devolvido inalterado. Serve para correlacionar requisição e resposta nos seus registros.</span></div>
+          <div class="field-row"><span>method</span><span>Nome do método. <code>GET /methods</code> lista os disponíveis.</span></div>
+          <div class="field-row"><span>params</span><span>Objeto com os parâmetros do método. Pode ser omitido quando o método não exige nenhum.</span></div>
+        </div>
+
+        <div class="callout">
+          <p>
+            <b>Uma chamada por requisição.</b> O padrão JSON-RPC permite enviar um vetor de
+            chamadas em lote; esta API não implementa isso. Para consultar vários documentos,
+            faça requisições sequenciais.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- montador ---------- -->
+      <section id="montador">
+        <h2>Montar chamada</h2>
+        <p class="section-note">
+          Escolha o método, preencha os parâmetros e copie o código pronto na linguagem que
+          você usa. O código é gerado aqui no navegador — nada é enviado.
+        </p>
+
+        <div class="builder">
+          <div class="builder-head">
+            <strong>Gerador de requisição</strong>
+            <span id="builder-endpoint">POST https://api-db.gpsceara.shop/rpc</span>
+          </div>
+
+          <div class="builder-body">
+            <div class="builder-form">
+              <div class="field">
+                <label for="sel-metodo">Método</label>
+                <select id="sel-metodo"></select>
+                <span class="hint" id="hint-metodo"></span>
+              </div>
+
+              <div id="campos-params" style="display: flex; flex-direction: column; gap: 15px;"></div>
+
+              <div class="field">
+                <label>Endereço</label>
+                <input type="text" id="inp-endpoint" value="https://api-db.gpsceara.shop" readonly>
+              </div>
+            </div>
+
+            <div class="builder-out">
+              <div class="langs" role="tablist" aria-label="Linguagem do exemplo">
+                <button type="button" role="tab" data-lang="curl"   aria-selected="true">cURL</button>
+                <button type="button" role="tab" data-lang="node"   aria-selected="false">Node.js</button>
+                <button type="button" role="tab" data-lang="python" aria-selected="false">Python</button>
+                <button type="button" role="tab" data-lang="php"    aria-selected="false">PHP</button>
+                <button type="button" role="tab" data-lang="n8n"    aria-selected="false">n8n</button>
+              </div>
+              <div class="out-wrap">
+                <button type="button" class="copy" id="btn-copiar">copiar</button>
+                <pre><code id="saida-codigo"></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- resposta ---------- -->
+      <section id="resposta">
+        <h2>Resposta</h2>
+        <p class="section-note">
+          Sucesso e falha usam o <b>mesmo formato</b>. Leia o campo <code>status</code> — não o
+          código HTTP, que em certas situações vem da infraestrutura e não do serviço.
+        </p>
+
+<pre><code>{
+  <span class="tok-key">"jsonrpc"</span>: <span class="tok-str">"2.0"</span>,
+  <span class="tok-key">"id"</span>: <span class="tok-num">1</span>,
+  <span class="tok-key">"status"</span>: <span class="tok-str">"ok"</span>,
+  <span class="tok-key">"ok"</span>: <span class="tok-num">true</span>,
+  <span class="tok-key">"found"</span>: <span class="tok-num">true</span>,
+  <span class="tok-key">"dbConnected"</span>: <span class="tok-num">true</span>,
+  <span class="tok-key">"message"</span>: <span class="tok-str">"Consulta realizada com sucesso"</span>,
+  <span class="tok-key">"result"</span>: { <span class="tok-com">/* varia conforme o método */</span> },
+  <span class="tok-key">"timestamp"</span>: <span class="tok-str">"2026-09-02T19:10:39.434Z"</span>
+}</code></pre>
+
+        <div class="field-list">
+          <div class="field-row"><span>status</span><span>O que aconteceu, em uma palavra. É o campo de decisão.</span></div>
+          <div class="field-row"><span>ok</span><span>A requisição foi processada sem falha — inclusive quando nada foi encontrado.</span></div>
+          <div class="field-row"><span>found</span><span>Veio dado do banco. Separa "não existe" de "deu erro".</span></div>
+          <div class="field-row"><span>dbConnected</span><span>Houve conexão efetiva com o banco nesta requisição.</span></div>
+          <div class="field-row"><span>message</span><span>Texto pronto para exibir a quem está do outro lado.</span></div>
+          <div class="field-row"><span>result</span><span>Os dados, ou <code>null</code>.</span></div>
+          <div class="field-row"><span>error</span><span>Presente só em falha: <code>code</code>, <code>message</code> e, quando habilitado, <code>detail</code> técnico.</span></div>
+        </div>
+
+        <div class="callout">
+          <p>
+            <b>Por que <code>ok: true</code> com <code>found: false</code>?</b>
+            Um cliente que não existe não é erro — a consulta rodou e a resposta é "não há
+            registro". Tratar isso como falha faria o seu sistema repetir eternamente uma
+            busca por um dado que nunca vai aparecer.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- erros ---------- -->
+      <section id="erros">
+        <h2>Erros</h2>
+        <p class="section-note">
+          Sete estados possíveis. A distinção entre eles é o que permite decidir se vale
+          repetir, corrigir a chamada ou avisar o usuário.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>status</th>
+                <th>HTTP</th>
+                <th>code</th>
+                <th>Quando acontece</th>
+                <th>O que fazer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="pill ok">ok</span></td>
+                <td class="num">200</td>
+                <td class="num">—</td>
+                <td>Consultou e encontrou.</td>
+                <td>Usar <code>result</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="pill neutral">not_found</span></td>
+                <td class="num">200</td>
+                <td class="num">—</td>
+                <td>Consultou; nenhum registro corresponde.</td>
+                <td>Informar que não há cadastro. Não repetir.</td>
+              </tr>
+              <tr>
+                <td><span class="pill warn">invalid_params</span></td>
+                <td class="num">400</td>
+                <td class="num">-32602</td>
+                <td>Parâmetro ausente ou malformado. O banco nem foi consultado.</td>
+                <td>Corrigir a chamada — <code>message</code> diz o quê.</td>
+              </tr>
+              <tr>
+                <td><span class="pill crit">unauthorized</span></td>
+                <td class="num">401</td>
+                <td class="num">-32001</td>
+                <td>Chave ausente ou inválida.</td>
+                <td>Conferir a chave configurada.</td>
+              </tr>
+              <tr>
+                <td><span class="pill warn">method_not_found</span></td>
+                <td class="num">404</td>
+                <td class="num">-32601</td>
+                <td>O método não existe. A resposta lista os disponíveis em <code>error.detail</code>.</td>
+                <td>Corrigir o nome do método.</td>
+              </tr>
+              <tr>
+                <td><span class="pill warn">rate_limited</span></td>
+                <td class="num">429</td>
+                <td class="num">-32020</td>
+                <td>Limite por minuto ou quota diária da chave atingidos.</td>
+                <td>Aguardar o tempo do cabeçalho <code>Retry-After</code> e repetir.</td>
+              </tr>
+              <tr>
+                <td><span class="pill crit">db_unavailable</span></td>
+                <td class="num">503</td>
+                <td class="num">-32010</td>
+                <td>Não houve conexão com o banco. Nenhuma consulta foi executada.</td>
+                <td>Repetir depois. Falha temporária de infraestrutura.</td>
+              </tr>
+              <tr>
+                <td><span class="pill crit">query_failed</span></td>
+                <td class="num">502</td>
+                <td class="num">-32011</td>
+                <td>Conectou, mas a consulta não pôde ser concluída.</td>
+                <td>Não repetir — o problema está na consulta. Reportar.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+<pre><code>{
+  <span class="tok-key">"status"</span>: <span class="tok-str">"db_unavailable"</span>,
+  <span class="tok-key">"ok"</span>: <span class="tok-num">false</span>,
+  <span class="tok-key">"found"</span>: <span class="tok-num">false</span>,
+  <span class="tok-key">"dbConnected"</span>: <span class="tok-num">false</span>,
+  <span class="tok-key">"message"</span>: <span class="tok-str">"Nao houve conexao efetiva com o banco de dados. Nenhuma consulta foi executada. Tente novamente em instantes."</span>,
+  <span class="tok-key">"result"</span>: <span class="tok-num">null</span>,
+  <span class="tok-key">"error"</span>: { <span class="tok-key">"code"</span>: <span class="tok-num">-32010</span>, <span class="tok-key">"message"</span>: <span class="tok-str">"..."</span> }
+}</code></pre>
+
+        <div class="callout warn">
+          <p>
+            <b>Trate também a resposta que não segue este formato.</b> O envelope só existe
+            enquanto o serviço está no ar para respondê-lo. Se o processo cair, quem responde é
+            a camada de rede acima dele — com o formato dela, onde <code>status</code> costuma
+            ser o número do erro HTTP, não um texto.
+          </p>
+          <p>
+            Uma comparação direta com <code>"ok"</code> quebra nesse caso. Só a resposta do
+            serviço traz o campo <code>jsonrpc</code> — é o que distingue falha do serviço de
+            falha de infraestrutura.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- catálogo ---------- -->
+      <section id="catalogo">
+        <h2>Métodos</h2>
+        <p class="section-note">
+          Três métodos disponíveis. <code>GET /methods</code> devolve este catálogo em JSON,
+          útil para descobrir novidades sem consultar esta página.
+        </p>
+
+        <article class="method">
+          <p class="method-name">historicoFinanceiro</p>
+          <p class="method-desc">
+            Histórico financeiro completo do cliente: todas as duplicatas com situação de
+            pagamento, juros e multa já calculados, mais um totalizador com indicadores de
+            comportamento.
+          </p>
+
+          <dl class="params">
+            <dt>documento <span class="req">obrigatório</span></dt>
+            <dd>CPF (11 dígitos) ou CNPJ (14). Pontuação opcional — é normalizada.</dd>
+            <dt>dataInicio</dt>
+            <dd>AAAA-MM-DD. Filtra por vencimento. Ausente = sem limite.</dd>
+            <dt>dataFim</dt>
+            <dd>AAAA-MM-DD. Filtra por vencimento. Ausente = sem limite.</dd>
+            <dt>somenteBoleto</dt>
+            <dd>Restringe a formas de pagamento com boleto. Padrão <code>false</code>.</dd>
+            <dt>detalharAgrupadas</dt>
+            <dd>Inclui componentes de agrupamentos como linhas informativas, marcadas com <code>ContaNoTotal: false</code> — não entram no totalizador. Padrão <code>false</code>; use apenas quando esse detalhe for necessário.</dd>
+          </dl>
+
+          <h3>Resposta</h3>
+<pre><code>{
+  <span class="tok-key">"cliente"</span>: { <span class="tok-key">"nome"</span>, <span class="tok-key">"documento"</span>, <span class="tok-key">"celular"</span>, <span class="tok-key">"email"</span> },
+
+  <span class="tok-key">"resumo"</span>: {                       <span class="tok-com">// 23 indicadores</span>
+    <span class="tok-key">"QtdTitulos"</span>: <span class="tok-num">25</span>,
+    <span class="tok-key">"QtdPagos"</span>: <span class="tok-num">22</span>,
+    <span class="tok-key">"QtdEmAberto"</span>: <span class="tok-num">3</span>,
+    <span class="tok-key">"QtdVencidos"</span>: <span class="tok-num">1</span>,
+    <span class="tok-key">"TotalFaturado"</span>: <span class="tok-num">2061.75</span>,
+    <span class="tok-key">"TotalRecebido"</span>: <span class="tok-num">1751.25</span>,
+    <span class="tok-key">"TotalEmAberto"</span>: <span class="tok-num">310.50</span>,
+    <span class="tok-key">"TotalJurosMulta"</span>: <span class="tok-num">12.27</span>,
+    <span class="tok-key">"TotalEmAbertoComJuros"</span>: <span class="tok-num">322.77</span>,
+    <span class="tok-key">"TicketMedio"</span>: <span class="tok-num">82.47</span>,
+    <span class="tok-key">"MaiorAtrasoEmAberto"</span>: <span class="tok-num">30</span>,
+    <span class="tok-key">"PercPagosEmDia"</span>: <span class="tok-num">63.6</span>,
+    <span class="tok-key">"UltimoPagamento"</span>: <span class="tok-str">"2026-08-06"</span>
+  },
+
+  <span class="tok-key">"titulos"</span>: [ {                    <span class="tok-com">// 35 campos por título</span>
+    <span class="tok-key">"NumeroDuplicata"</span>, <span class="tok-key">"Parcela"</span>, <span class="tok-key">"Vencimento"</span>,
+    <span class="tok-key">"ValorDuplicata"</span>, <span class="tok-key">"Saldo"</span>, <span class="tok-key">"ValorEmAberto"</span>,
+    <span class="tok-key">"SituacaoPagamento"</span>, <span class="tok-key">"StatusDevedor"</span>, <span class="tok-key">"DiasAtraso"</span>,
+    <span class="tok-key">"Juros"</span>, <span class="tok-key">"SaldoComJuros"</span>, <span class="tok-key">"Protestado"</span>,
+    <span class="tok-key">"BoletoLinhaDigitavel"</span>, <span class="tok-key">"LinkBoleto"</span>, <span class="tok-key">"PixEmv"</span>
+  } ]
+}</code></pre>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Campo</th><th>Valores possíveis</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><code>SituacaoPagamento</code></td>
+                  <td>Pago · Parcialmente pago · Em aberto</td>
+                </tr>
+                <tr>
+                  <td><code>StatusDevedor</code></td>
+                  <td>Pago em dia · Pago em atraso · Boleto a Vencer · Boleto Vencendo hoje · Boleto Vencido</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout">
+            <p>
+              <b>Juros e multa são calculados no momento da consulta</b>, com base nos dias de
+              atraso até hoje e nos percentuais configurados para a empresa. Duas consultas em
+              dias diferentes trazem valores diferentes para o mesmo título em aberto.
+            </p>
+          </div>
+        </article>
+
+        <article class="method">
+          <p class="method-name">buscarClienteVeiculo</p>
+          <p class="method-desc">
+            Localiza o cliente por documento ou placa e devolve cadastro, veículo, situação
+            financeira em aberto e a última localização registrada.
+          </p>
+
+          <dl class="params">
+            <dt>termo <span class="req">obrigatório</span></dt>
+            <dd>CPF, CNPJ ou placa. Pontuação e hífen são normalizados.</dd>
+          </dl>
+
+          <h3>Resposta</h3>
+          <p>Objeto único com 22 campos, entre eles:</p>
+
+<pre><code>{
+  <span class="tok-key">"CODIGOCLIENTE"</span>, <span class="tok-key">"EMPRESA"</span>, <span class="tok-key">"NOME"</span>,
+  <span class="tok-key">"ENDEREÇO"</span>, <span class="tok-key">"CONTATO"</span>,
+  <span class="tok-key">"PLACA"</span>, <span class="tok-key">"MODELO"</span>, <span class="tok-key">"ANO"</span>, <span class="tok-key">"COR"</span>,
+  <span class="tok-key">"MENSALIDADES EM ABERTO"</span>, <span class="tok-key">"TOTAL VENCIMENTO"</span>,
+  <span class="tok-key">"TOTAL VENCIMENTOS C/ JUROS"</span>, <span class="tok-key">"SALDO DEVEDOR"</span>,
+  <span class="tok-key">"DIAS DE ATRASO"</span>, <span class="tok-key">"DIA DE VENCIMENTO"</span>,
+  <span class="tok-key">"LOCAL"</span>, <span class="tok-key">"CONTÉM BACKUP"</span>
+}</code></pre>
+
+          <p>
+            <code>LOCAL</code> vem como link de mapa com a última posição conhecida, ou
+            <code>null</code> quando não há registro. Valores monetários já vêm formatados em
+            reais.
+          </p>
+
+          <div class="callout">
+            <p>
+              <b>Busca por documento de cliente com mais de um veículo</b> devolve apenas o
+              primeiro registro. Buscando por placa não há ambiguidade — prefira a placa
+              quando ela for conhecida.
+            </p>
+          </div>
+        </article>
+
+        <article class="method">
+          <p class="method-name">getCliente</p>
+          <p class="method-desc">
+            Cadastro completo do cliente pelo código interno do ERP. Útil quando o código já é
+            conhecido por uma consulta anterior.
+          </p>
+
+          <dl class="params">
+            <dt>codCliente <span class="req">obrigatório</span></dt>
+            <dd>Inteiro positivo — o <code>CodCliente</code> do ServiceERP.</dd>
+          </dl>
+
+          <p>Devolve a linha de cadastro do cliente como está no ERP.</p>
+        </article>
+      </section>
+
+      <!-- ---------- consumo da chave ---------- -->
+      <section id="consumo">
+        <h2>Sua chave</h2>
+        <p class="section-note">
+          <code>GET /chaves</code> mostra a situação da sua chave e quanto dela já foi
+          consumido hoje — medido no processo em execução, não estimado. Serve para
+          acompanhar a quota sem precisar perguntar a ninguém.
+        </p>
+
+<pre><code>curl -H "X-API-Key: SUA_CHAVE" https://api-db.gpsceara.shop/chaves</code></pre>
+
+<pre><code>{
+  <span class="tok-key">"escopo"</span>: <span class="tok-str">"propria"</span>,
+  <span class="tok-key">"chaves"</span>: [{
+    <span class="tok-key">"nome"</span>: <span class="tok-str">"app-parceiro"</span>,
+    <span class="tok-key">"situacao"</span>: <span class="tok-str">"valida"</span>,
+    <span class="tok-key">"expiraEm"</span>: <span class="tok-str">"2027-09-03"</span>,
+    <span class="tok-key">"diasRestantes"</span>: <span class="tok-num">365</span>,
+    <span class="tok-key">"limites"</span>: { <span class="tok-key">"porMinuto"</span>: <span class="tok-num">…</span>, <span class="tok-key">"porDia"</span>: <span class="tok-num">…</span> },
+    <span class="tok-key">"consumo"</span>: {
+      <span class="tok-key">"minuto"</span>: <span class="tok-num">3</span>, <span class="tok-key">"dia"</span>: <span class="tok-num">412</span>,
+      <span class="tok-key">"restanteDia"</span>: <span class="tok-num">…</span>, <span class="tok-key">"percentualDia"</span>: <span class="tok-num">2.1</span>
+    }
+  }]
+}</code></pre>
+
+        <div class="field-list">
+          <div class="field-row"><span>situacao</span><span><code>valida</code>, <code>sem prazo</code>, <code>expira em N dias</code>, <code>expirada</code> ou <code>revogada</code>.</span></div>
+          <div class="field-row"><span>consumo.dia</span><span>Requisições feitas hoje. <code>restanteDia</code> é o que sobra da quota.</span></div>
+          <div class="field-row"><span>escopo</span><span><code>propria</code> — cada chave enxerga apenas a si mesma.</span></div>
+        </div>
+
+        <p>
+          O valor da chave nunca aparece na resposta, e uma chave não enxerga a existência
+          das outras. As mesmas informações vêm nos cabeçalhos de toda resposta de
+          <code>/rpc</code>: <code>X-RateLimit-Remaining-Minute</code> e
+          <code>X-RateLimit-Remaining-Day</code>.
+        </p>
+
+        <div class="callout">
+          <p>
+            <b>Chave com prazo.</b> Se a sua tem <code>expiraEm</code>, acompanhe
+            <code>diasRestantes</code> e peça a substituta antes do vencimento — expirada,
+            ela passa a receber <span class="pill crit">unauthorized</span> em toda chamada.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- guia de integração ---------- -->
+      <section id="integrar">
+        <h2>Guia de integração</h2>
+        <p class="section-note">
+          O que separa uma integração que aguenta o dia a dia de uma que quebra na primeira
+          instabilidade.
+        </p>
+
+        <h3>1. Decida pelo campo <code>status</code></h3>
+        <p>
+          Converta antes de comparar. Em falha de infraestrutura o campo pode chegar como
+          número, e uma comparação estrita de texto quebra:
+        </p>
+
+<pre><code><span class="tok-com">// resiste a resposta fora do formato esperado</span>
+<span class="tok-key">const</span> corpo = <span class="tok-key">await</span> resposta.json();
+<span class="tok-key">const</span> status = String(corpo?.status ?? <span class="tok-str">'sem_resposta'</span>);
+<span class="tok-key">const</span> doServico = Boolean(corpo?.jsonrpc);  <span class="tok-com">// falso = falha de infraestrutura</span>
+
+<span class="tok-key">if</span> (status === <span class="tok-str">'ok'</span>)              usar(corpo.result);
+<span class="tok-key">else if</span> (status === <span class="tok-str">'not_found'</span>)  avisarSemCadastro();
+<span class="tok-key">else if</span> (status === <span class="tok-str">'db_unavailable'</span>) repetirMaisTarde();
+<span class="tok-key">else</span>                              registrarFalha(corpo);</code></pre>
+
+        <h3>2. Repita só o que vale a pena</h3>
+        <div class="field-list">
+          <div class="field-row">
+            <span>db_unavailable</span>
+            <span>Repetir depois de alguns segundos, com espera crescente.</span>
+          </div>
+          <div class="field-row">
+            <span>Timeout / sem resposta</span>
+            <span>Repetir com espera crescente, no máximo 2 ou 3 vezes.</span>
+          </div>
+          <div class="field-row">
+            <span>query_failed</span>
+            <span>Não repetir. O erro está na consulta e vai se repetir igual. Registrar e reportar.</span>
+          </div>
+          <div class="field-row">
+            <span>invalid_params · unauthorized · method_not_found</span>
+            <span>Não repetir. São erros da chamada — repetir só gasta tempo.</span>
+          </div>
+          <div class="field-row">
+            <span>not_found</span>
+            <span>Não repetir. Não é falha: o cadastro não existe.</span>
+          </div>
+        </div>
+
+        <h3>3. Dimensione o tempo limite</h3>
+        <p>
+          Use <b>30 segundos</b>. Limites de 3 ou 5 segundos são curtos demais: uma consulta
+          eventual pode passar disso legitimamente, e a chamada seria abortada sem necessidade.
+        </p>
+
+        <h3>4. Cuide dos dados que receber</h3>
+        <p>
+          As respostas contêm nome, documento, contato, endereço e situação financeira de
+          pessoas físicas. Trate como dado pessoal: restrinja quem vê, evite gravar em log
+          integralmente e não repasse a terceiros sem base legal.
+        </p>
+
+        <h3>5. Monitore pelo <code>/health</code></h3>
+        <p>
+          A rota responde sem chave e sempre com HTTP 200 — o campo <code>status</code> traz
+          <code>ok</code> ou <code>degraded</code>, e <code>database.latencyMs</code> mostra o
+          tempo de ida e volta até o banco. Serve direto em qualquer monitor externo.
+        </p>
+      </section>
+
+      <!-- ---------- limites ---------- -->
+      <section id="limites">
+        <h2>Limites</h2>
+
+        <div class="field-list">
+          <div class="field-row"><span>Volume</span><span>Limite por minuto e quota diária, definidos em contrato para cada integração. Ao estourar, <code>429</code> com <code>Retry-After</code>. Volumes maiores são combinados previamente.</span></div>
+          <div class="field-row"><span>Escrita</span><span>Não existe. A API é exclusivamente de leitura — nenhum método altera dados no ERP.</span></div>
+          <div class="field-row"><span>Lote</span><span>Uma chamada por requisição. Vetor de chamadas JSON-RPC não é suportado.</span></div>
+          <div class="field-row"><span>Versionamento</span><span>Sem versão no caminho. Métodos e campos só são acrescentados; remoção ou mudança de significado é comunicada antes.</span></div>
+        </div>
+
+        <div class="callout">
+          <p>
+            <b>Ao adicionar campos.</b> Novos campos podem aparecer nas respostas sem aviso.
+            Sua integração não deve quebrar com campo desconhecido — leia o que precisa e
+            ignore o resto.
+          </p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p>
+          Endereços, credenciais e dados de clientes usados nesta página são exemplos. Para
+          obter uma chave de acesso ou tratar de volumes, fale com a equipe responsável pela
+          integração.
+        </p>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- =================================================================== -->
+  <!--  VISÃO 2 — ARQUITETURA E OPERAÇÃO (interno)                        -->
+  <!-- =================================================================== -->
+
+  <div class="shell" id="view-tec" role="tabpanel" aria-labelledby="tab-tec" hidden>
+
+    <nav class="toc">
+      <p>Nesta página</p>
+      <ol>
+        <li><a href="#garantias">Garantias</a></li>
+        <li><a href="#fluxo">Como funciona</a></li>
+        <li><a href="#indisponibilidade">Quando algo falha</a></li>
+        <li><a href="#dados">Tratamento de dados</a></li>
+        <li><a href="#servico">Rotas de serviço</a></li>
+      </ol>
+    </nav>
+
+    <main>
+
+      <section id="garantias">
+        <h2>Garantias</h2>
+        <p class="section-note">
+          O que a integração pode assumir sobre o comportamento do serviço.
+        </p>
+
+        <div class="field-list">
+          <div class="field-row">
+            <span>Somente leitura</span>
+            <span>Nenhum método altera dados no ERP. Não há operação de escrita exposta, e a credencial usada no banco não tem permissão para escrever.</span>
+          </div>
+          <div class="field-row">
+            <span>Síncrono</span>
+            <span>Uma requisição, uma resposta, na mesma conexão. Sem fila, sem callback, sem estado entre chamadas.</span>
+          </div>
+          <div class="field-row">
+            <span>Sem efeito colateral</span>
+            <span>Repetir uma consulta produz o mesmo resultado e não gera cobrança, registro ou alteração de nada — repetição em caso de falha é segura.</span>
+          </div>
+          <div class="field-row">
+            <span>Resposta sempre legível</span>
+            <span>Toda situação prevista devolve o envelope padrão com <code>status</code> e <code>message</code>, inclusive indisponibilidade. O serviço não devolve erro sem explicação.</span>
+          </div>
+          <div class="field-row">
+            <span>Dados no momento da consulta</span>
+            <span>Não há cache: cada chamada reflete o estado atual do ERP. Juros e multa são calculados na hora, então o mesmo título em aberto muda de valor conforme os dias passam.</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="fluxo">
+        <h2>Como funciona</h2>
+        <p class="section-note">
+          A requisição chega, o serviço consulta a base do ERP e devolve o resultado na mesma
+          conexão. Não há callback nem URL de retorno para configurar do lado de quem consome.
+        </p>
+
+        <div class="flow">
+          <svg viewBox="0 0 520 132" role="img" aria-label="Caminho de uma requisição: consumidor, serviço de integração, base do ERP">
+            <defs>
+              <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+              </marker>
+            </defs>
+
+            <g font-family="Poppins, sans-serif" font-size="10.5" fill="currentColor">
+              <g>
+                <rect x="1" y="30" width="130" height="52" rx="4" fill="none" stroke="currentColor" stroke-opacity=".32"></rect>
+                <text x="66" y="51" text-anchor="middle" font-size="11.5" font-weight="500">Sua aplicação</text>
+                <text x="66" y="67" text-anchor="middle" fill-opacity=".62">HTTPS</text>
+              </g>
+              <g>
+                <rect x="195" y="30" width="130" height="52" rx="4" fill="none" stroke="currentColor" stroke-opacity=".32"></rect>
+                <text x="260" y="51" text-anchor="middle" font-size="11.5" font-weight="500">Integração</text>
+                <text x="260" y="67" text-anchor="middle" fill-opacity=".62">somente leitura</text>
+              </g>
+              <g>
+                <rect x="389" y="30" width="130" height="52" rx="4" fill="none" stroke="currentColor" stroke-opacity=".32"></rect>
+                <text x="454" y="51" text-anchor="middle" font-size="11.5" font-weight="500">Base do ERP</text>
+                <text x="454" y="67" text-anchor="middle" fill-opacity=".62">rede privada</text>
+              </g>
+
+              <g stroke="currentColor" stroke-opacity=".5" fill="none" marker-end="url(#seta)">
+                <line x1="133" y1="48" x2="190" y2="48"></line>
+                <line x1="327" y1="48" x2="384" y2="48"></line>
+              </g>
+              <g stroke="currentColor" stroke-opacity=".28" fill="none" stroke-dasharray="3 3" marker-end="url(#seta)">
+                <line x1="384" y1="66" x2="330" y2="66"></line>
+                <line x1="190" y1="66" x2="136" y2="66"></line>
+              </g>
+
+              <text x="260" y="105" text-anchor="middle" font-size="9.5" fill-opacity=".55">resposta na mesma conexão · JSON</text>
+            </g>
+          </svg>
+        </div>
+
+        <p>
+          A base do ERP fica em rede privada e não é acessível pela internet. O serviço de
+          integração é a única porta de entrada, e expõe apenas as consultas descritas na
+          referência da API — não há acesso genérico à base.
+        </p>
+      </section>
+
+      <section id="indisponibilidade">
+        <h2>Quando algo falha</h2>
+        <p class="section-note">
+          Como o fluxo é síncrono, quem chama fica esperando. O serviço é construído para que
+          essa espera seja curta mesmo quando a base está indisponível.
+        </p>
+
+        <h3>Falha temporária de rede</h3>
+        <p>
+          Falhas de conexão são repetidas internamente antes de o serviço desistir. Repetir é
+          seguro porque todas as consultas são de leitura. Erro na consulta em si não é
+          repetido — devolve <span class="pill crit">query_failed</span> de imediato, já que
+          repetir não mudaria o resultado.
+        </p>
+
+        <h3>Base indisponível</h3>
+        <p>
+          Persistindo a falha, o serviço passa a responder
+          <span class="pill crit">db_unavailable</span> imediatamente, em vez de deixar cada
+          requisição esperando. A recuperação é automática: assim que a base volta, o serviço
+          volta a atender sem intervenção.
+        </p>
+        <p>
+          Nesse estado a resposta continua no formato padrão, com <code>dbConnected</code> em
+          <code>false</code> e mensagem pronta para exibir ao usuário final. Vale repetir a
+          chamada depois de alguns segundos.
+        </p>
+
+        <div class="callout warn">
+          <p>
+            <b>Trate também a resposta que não segue o formato.</b> O envelope só existe
+            enquanto o serviço está no ar para respondê-lo. Se o serviço estiver fora, quem
+            responde é a camada de rede acima dele, com o formato dela — onde
+            <code>status</code> costuma ser o número do erro HTTP, não um texto. Só a resposta
+            do serviço traz o campo <code>jsonrpc</code>.
+          </p>
+        </div>
+      </section>
+
+      <section id="dados">
+        <h2>Tratamento de dados</h2>
+        <p class="section-note">
+          As respostas contêm nome, documento, contato, endereço e situação financeira de
+          pessoas físicas. O serviço trata esses dados com os cuidados abaixo, e espera o
+          mesmo de quem consome.
+        </p>
+
+        <div class="field-list">
+          <div class="field-row">
+            <span>Acesso identificado</span>
+            <span>Cada integração usa uma chave própria, com limites e validade definidos. Uma chave pode ser revogada isoladamente, sem afetar as demais.</span>
+          </div>
+          <div class="field-row">
+            <span>Registro de acesso</span>
+            <span>Toda consulta é registrada, permitindo responder quem acessou os dados de um cliente e quando. Os documentos consultados não são gravados em texto claro.</span>
+          </div>
+          <div class="field-row">
+            <span>Transporte cifrado</span>
+            <span>Somente HTTPS. Requisições em texto claro não são atendidas.</span>
+          </div>
+          <div class="field-row">
+            <span>Monitoramento de uso</span>
+            <span>O padrão de consumo de cada chave é acompanhado. Uso incompatível com o combinado leva à suspensão da chave.</span>
+          </div>
+        </div>
+
+        <div class="callout">
+          <p>
+            <b>Do lado de quem consome:</b> restrinja quem enxerga as respostas, evite gravar
+            o conteúdo integral em registros de aplicação, e não repasse os dados a terceiros
+            sem base legal. A chave dá acesso a dados pessoais — guarde em cofre de segredos
+            ou variável de ambiente, nunca no código-fonte ou no aplicativo distribuído.
+          </p>
+        </div>
+      </section>
+
+      <section id="servico">
+        <h2>Rotas de serviço</h2>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Rota</th><th>Chave</th><th>Para que serve</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>GET /health</code></td>
+                <td><span class="pill neutral">pública</span></td>
+                <td>Estado do serviço. Responde <code>200</code> sempre — <code>status</code> vira <code>degraded</code> quando as consultas estão indisponíveis.</td>
+              </tr>
+              <tr>
+                <td><code>GET /ping</code></td>
+                <td><span class="pill neutral">pública</span></td>
+                <td>Prova de vida do serviço.</td>
+              </tr>
+              <tr>
+                <td><code>GET /methods</code></td>
+                <td><span class="pill warn">chave</span></td>
+                <td>Catálogo dos métodos disponíveis, com parâmetros e descrição.</td>
+              </tr>
+              <tr>
+                <td><code>GET /chaves</code></td>
+                <td><span class="pill warn">chave</span></td>
+                <td>Situação e consumo da própria chave.</td>
+              </tr>
+              <tr>
+                <td><code>POST /rpc</code></td>
+                <td><span class="pill warn">chave</span></td>
+                <td>Execução das consultas.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          <code>/health</code> e <code>/ping</code> dispensam chave para permitir monitoração
+          externa. Nenhuma das duas devolve dado de cliente.
+        </p>
+      </section>
+
+      <footer class="foot">
+        <p>
+          Documentação destinada a quem integra com o serviço. Detalhes de implementação,
+          configuração e operação interna não constam aqui por decisão de segurança.
+        </p>
+      </footer>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    /* ---------- alternador de visão ---------- */
+
+    var abas = [
+      { botao: document.getElementById('tab-api'), painel: document.getElementById('view-api') },
+      { botao: document.getElementById('tab-tec'), painel: document.getElementById('view-tec') }
+    ];
+
+    abas.forEach(function (aba) {
+      aba.botao.addEventListener('click', function () {
+        abas.forEach(function (outra) {
+          var ativa = outra === aba;
+          outra.botao.setAttribute('aria-selected', String(ativa));
+          outra.painel.hidden = !ativa;
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    /* ---------- catálogo de métodos ---------- */
+
+    var METODOS = {
+      historicoFinanceiro: {
+        resumo: 'Duplicatas do cliente + totalizador financeiro.',
+        params: [
+          { nome: 'documento', tipo: 'texto', obrigatorio: true, valor: '123.456.789-00',
+            ajuda: 'CPF ou CNPJ, com ou sem pontuação' },
+          { nome: 'dataInicio', tipo: 'texto', valor: '', ajuda: 'AAAA-MM-DD · vazio = sem limite' },
+          { nome: 'dataFim', tipo: 'texto', valor: '', ajuda: 'AAAA-MM-DD · vazio = sem limite' },
+          { nome: 'somenteBoleto', tipo: 'bool', valor: false, ajuda: 'só formas de pagamento com boleto' },
+          { nome: 'detalharAgrupadas', tipo: 'bool', valor: false, ajuda: 'inclui componentes de agrupamentos' }
+        ]
+      },
+      buscarClienteVeiculo: {
+        resumo: 'Cadastro, veículo, financeiro em aberto e última localização.',
+        params: [
+          { nome: 'termo', tipo: 'texto', obrigatorio: true, valor: 'ABC1D23',
+            ajuda: 'CPF, CNPJ ou placa' }
+        ]
+      },
+      getCliente: {
+        resumo: 'Cadastro completo pelo código interno do ERP.',
+        params: [
+          { nome: 'codCliente', tipo: 'texto', obrigatorio: true, valor: '25136',
+            ajuda: 'inteiro positivo' }
+        ]
+      }
+    };
+
+    var selMetodo = document.getElementById('sel-metodo');
+    var hintMetodo = document.getElementById('hint-metodo');
+    var campos = document.getElementById('campos-params');
+    var selEndpoint = document.getElementById('inp-endpoint');
+    var saida = document.getElementById('saida-codigo');
+    var rotuloEndpoint = document.getElementById('builder-endpoint');
+    var botaoCopiar = document.getElementById('btn-copiar');
+    var botoesLang = Array.prototype.slice.call(document.querySelectorAll('.langs button'));
+
+    var linguagem = 'curl';
+
+    Object.keys(METODOS).forEach(function (nome) {
+      var opcao = document.createElement('option');
+      opcao.value = nome;
+      opcao.textContent = nome;
+      selMetodo.appendChild(opcao);
+    });
+
+    function montarCampos() {
+      var metodo = METODOS[selMetodo.value];
+      hintMetodo.textContent = metodo.resumo;
+      campos.textContent = '';
+
+      metodo.params.forEach(function (param) {
+        var bloco = document.createElement('div');
+        bloco.className = 'field';
+
+        if (param.tipo === 'bool') {
+          var linha = document.createElement('label');
+          linha.className = 'check';
+          var caixa = document.createElement('input');
+          caixa.type = 'checkbox';
+          caixa.dataset.param = param.nome;
+          caixa.checked = Boolean(param.valor);
+          caixa.addEventListener('change', gerar);
+          linha.appendChild(caixa);
+          linha.appendChild(document.createTextNode(param.nome));
+          bloco.appendChild(linha);
+
+          var dica = document.createElement('span');
+          dica.className = 'hint';
+          dica.textContent = param.ajuda;
+          bloco.appendChild(dica);
+        } else {
+          var etiqueta = document.createElement('label');
+          etiqueta.setAttribute('for', 'p-' + param.nome);
+          etiqueta.textContent = param.nome + (param.obrigatorio ? ' *' : '');
+          bloco.appendChild(etiqueta);
+
+          var entrada = document.createElement('input');
+          entrada.type = 'text';
+          entrada.id = 'p-' + param.nome;
+          entrada.dataset.param = param.nome;
+          entrada.value = param.valor;
+          entrada.placeholder = param.ajuda;
+          entrada.addEventListener('input', gerar);
+          bloco.appendChild(entrada);
+
+          var ajuda = document.createElement('span');
+          ajuda.className = 'hint';
+          ajuda.textContent = param.ajuda;
+          bloco.appendChild(ajuda);
+        }
+
+        campos.appendChild(bloco);
+      });
+
+      gerar();
+    }
+
+    function coletarParams() {
+      var valores = {};
+      campos.querySelectorAll('[data-param]').forEach(function (elemento) {
+        var nome = elemento.dataset.param;
+        if (elemento.type === 'checkbox') {
+          if (elemento.checked) valores[nome] = true;
+        } else if (elemento.value.trim() !== '') {
+          valores[nome] = elemento.value.trim();
+        }
+      });
+      return valores;
+    }
+
+    function gerarCodigo(base, corpo) {
+      var url = base + '/rpc';
+      var corpoTexto = JSON.stringify(corpo);
+      var corpoIndentado = JSON.stringify(corpo, null, 2);
+
+      if (linguagem === 'curl') {
+        return 'curl -X POST ' + url + ' \\\n' +
+          '  -H "Content-Type: application/json" \\\n' +
+          '  -H "X-API-Key: $API_KEY" \\\n' +
+          "  -d '" + corpoTexto + "'";
+      }
+
+      if (linguagem === 'node') {
+        return 'const resposta = await fetch("' + url + '", {\n' +
+          '  method: "POST",\n' +
+          '  headers: {\n' +
+          '    "Content-Type": "application/json",\n' +
+          '    "X-API-Key": process.env.API_KEY\n' +
+          '  },\n' +
+          '  body: JSON.stringify(' + corpoIndentado.replace(/\n/g, '\n  ') + '),\n' +
+          '  signal: AbortSignal.timeout(30000)\n' +
+          '});\n\n' +
+          'const corpo = await resposta.json();\n' +
+          'const status = String(corpo?.status ?? "sem_resposta");\n\n' +
+          'if (status === "ok") console.log(corpo.result);\n' +
+          'else console.warn(status, corpo.message);';
+      }
+
+      if (linguagem === 'python') {
+        var corpoPy = corpoIndentado
+          .replace(/\btrue\b/g, 'True')
+          .replace(/\bfalse\b/g, 'False')
+          .replace(/\n/g, '\n    ');
+        return 'import os, requests\n\n' +
+          'resposta = requests.post(\n' +
+          '    "' + url + '",\n' +
+          '    headers={"X-API-Key": os.environ["API_KEY"]},\n' +
+          '    json=' + corpoPy + ',\n' +
+          '    timeout=30,\n' +
+          ')\n\n' +
+          'corpo = resposta.json()\n' +
+          'status = str(corpo.get("status", "sem_resposta"))\n\n' +
+          'if status == "ok":\n' +
+          '    print(corpo["result"])\n' +
+          'else:\n' +
+          '    print(status, corpo.get("message"))';
+      }
+
+      if (linguagem === 'php') {
+        var corpoPhp = corpoIndentado.replace(/\n/g, '\n');
+        return '<?php\n' +
+          '$ch = curl_init("' + url + '");\n' +
+          'curl_setopt_array($ch, [\n' +
+          '    CURLOPT_POST           => true,\n' +
+          '    CURLOPT_RETURNTRANSFER => true,\n' +
+          '    CURLOPT_TIMEOUT        => 30,\n' +
+          '    CURLOPT_HTTPHEADER     => [\n' +
+          '        "Content-Type: application/json",\n' +
+          '        "X-API-Key: " . getenv("API_KEY"),\n' +
+          '    ],\n' +
+          "    CURLOPT_POSTFIELDS     => '" + corpoTexto + "',\n" +
+          ']);\n\n' +
+          '$corpo  = json_decode(curl_exec($ch), true);\n' +
+          '$status = (string) ($corpo["status"] ?? "sem_resposta");\n\n' +
+          'if ($status === "ok") {\n' +
+          '    print_r($corpo["result"]);\n' +
+          '} else {\n' +
+          '    error_log($status . " " . ($corpo["message"] ?? ""));\n' +
+          '}';
+      }
+
+      // n8n — parâmetros do nó HTTP Request
+      return 'Nó: HTTP Request\n\n' +
+        'Method          POST\n' +
+        'URL             ' + url + '\n' +
+        'Send Headers    ativado\n' +
+        '  X-API-Key     sua chave\n' +
+        'Send Body       ativado\n' +
+        '  Content Type  JSON\n' +
+        '  Specify Body  Using JSON\n' +
+        '  JSON          ' + corpoTexto + '\n\n' +
+        'Options > Response > Never Error   ativado\n' +
+        'Options > Timeout                  30000\n\n' +
+        'Sem "Never Error" o n8n aborta em 503 e descarta\n' +
+        'o corpo com a mensagem de indisponibilidade.';
+    }
+
+    function gerar() {
+      var base = selEndpoint.value;
+      var corpo = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: selMetodo.value,
+        params: coletarParams()
+      };
+
+      rotuloEndpoint.textContent = 'POST ' + base + '/rpc';
+      saida.textContent = gerarCodigo(base, corpo);
+    }
+
+    botoesLang.forEach(function (botao) {
+      botao.addEventListener('click', function () {
+        linguagem = botao.dataset.lang;
+        botoesLang.forEach(function (outro) {
+          outro.setAttribute('aria-selected', String(outro === botao));
+        });
+        gerar();
+      });
+    });
+
+    selMetodo.addEventListener('change', montarCampos);
+    selEndpoint.addEventListener('change', gerar);
+
+    botaoCopiar.addEventListener('click', function () {
+      var texto = saida.textContent;
+      var concluir = function () {
+        botaoCopiar.textContent = 'copiado';
+        setTimeout(function () { botaoCopiar.textContent = 'copiar'; }, 1600);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(concluir).catch(function () {
+          botaoCopiar.textContent = 'selecione e copie';
+          setTimeout(function () { botaoCopiar.textContent = 'copiar'; }, 2200);
+        });
+      } else {
+        botaoCopiar.textContent = 'selecione e copie';
+        setTimeout(function () { botaoCopiar.textContent = 'copiar'; }, 2200);
+      }
+    });
+
+    montarCampos();
+  })();
+</script>
+</body>
+</html>

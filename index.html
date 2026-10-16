@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #F5F7F7; --surface: #FFFFFF; --line: #D3DBDC;
+    --ink: #10171A; --ink-mid: #47565D; --ink-soft: #6B7C84;
+    --accent: #A2551A; --ok: #17694A; --ok-bg: #DFEDE6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0D1214; --surface: #151B1E; --line: #2A343A;
+      --ink: #E7ECED; --ink-mid: #A5B3B9; --ink-soft: #7E8D94;
+      --accent: #D8874A; --ok: #6BC49A; --ok-bg: #163026;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: "Poppins", sans-serif; font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 880px; margin: 0 auto; padding: 58px 20px 96px; }
+  .eyebrow { font-size: 11.5px; font-weight: 500; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+  h1 { font-weight: 600; font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.1; letter-spacing: -.02em; margin: 0 0 14px; }
+  .lede { color: var(--ink-mid); max-width: 60ch; margin: 0 0 40px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  a.card { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; color: inherit; text-decoration: none; transition: border-color .15s; }
+  a.card:hover { border-color: var(--accent); }
+  a.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .card h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 6px; }
+  .card p { color: var(--ink-mid); font-size: 13.8px; margin: 0 0 14px; }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11.5px; }
+  .pill { padding: 2px 8px; border-radius: 3px; background: var(--ok-bg); color: var(--ok); font-weight: 500; }
+  .tag { padding: 2px 8px; border-radius: 3px; border: 1px solid var(--line); color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">DevGarb · docs</p>
+  <h1>Documentações</h1>
+  <p class="lede">Referência das APIs e serviços para quem vai integrar.</p>
+
+  <div class="grid">
+    <a class="card" href="integration_app_db/">
+      <h2>Integração ServiceERP</h2>
+      <p>Consulta ao ServiceERP via JSON-RPC: histórico financeiro, cliente e veículo, cadastro.</p>
+      <div class="meta"><span class="pill">v1.0.0</span><span class="tag">integration_app_db</span><span class="tag">JSON-RPC</span></div>
+    </a>
+  </div>
+</div>
+</body>
+</html>

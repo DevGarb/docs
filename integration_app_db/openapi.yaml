@@ -1,0 +1,546 @@
+openapi: 3.1.0
+
+info:
+  title: Integração ServiceERP
+  version: 1.0.0
+  description: |
+    Consulta o banco do ServiceERP e devolve o resultado na mesma requisição.
+    Somente leitura, autenticada por chave estática.
+
+    **Sobre o formato desta especificação.** A API é JSON-RPC: existe um único
+    caminho, `POST /rpc`, e o que muda entre uma consulta e outra é o campo
+    `method` do corpo. OpenAPI descreve APIs onde o recurso está no caminho, então
+    esta especificação representa cada método como uma variante do corpo, em
+    `oneOf`. Ferramentas de importação (Postman, Insomnia) funcionam bem; geradores
+    de client tendem a produzir uma única função com corpo genérico.
+
+    A referência legível, com exemplos por linguagem e um gerador de requisição,
+    acompanha esta especificação.
+  contact:
+    name: Equipe de integração
+
+servers:
+  - url: https://api-db.gpsceara.shop
+    description: Produção
+
+tags:
+  - name: Consultas
+    description: Execução dos métodos de consulta
+  - name: Serviço
+    description: Estado e catálogo, sem consultar dados
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /rpc:
+    post:
+      tags: [Consultas]
+      summary: Executa um método de consulta
+      description: |
+        O método vai no campo `method` e seus argumentos em `params`.
+        Uma chamada por requisição — vetor de chamadas não é suportado.
+      operationId: executarMetodo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Requisicao'
+            examples:
+              historicoFinanceiro:
+                summary: Histórico financeiro por CPF
+                value:
+                  jsonrpc: '2.0'
+                  id: 1
+                  method: historicoFinanceiro
+                  params:
+                    documento: '123.456.789-00'
+              historicoFinanceiroFiltrado:
+                summary: Histórico com filtro de período
+                value:
+                  jsonrpc: '2.0'
+                  id: 2
+                  method: historicoFinanceiro
+                  params:
+                    documento: '12345678900'
+                    dataInicio: '2026-01-01'
+                    dataFim: '2026-12-31'
+                    somenteBoleto: true
+              buscarClienteVeiculo:
+                summary: Cliente e veículo por placa
+                value:
+                  jsonrpc: '2.0'
+                  id: 3
+                  method: buscarClienteVeiculo
+                  params:
+                    termo: ABC1D23
+              getCliente:
+                summary: Cadastro por código interno
+                value:
+                  jsonrpc: '2.0'
+                  id: 4
+                  method: getCliente
+                  params:
+                    codCliente: 25136
+      responses:
+        '200':
+          description: |
+            Consulta executada. `status` é `ok` quando encontrou e `not_found`
+            quando nenhum registro corresponde — ambos são resposta normal.
+          headers:
+            X-RateLimit-Remaining-Minute:
+              schema: { type: integer }
+              description: Requisições restantes na janela de um minuto.
+            X-RateLimit-Remaining-Day:
+              schema: { type: integer }
+              description: Requisições restantes na quota diária.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaSucesso'
+              examples:
+                encontrado:
+                  summary: Encontrou
+                  value:
+                    jsonrpc: '2.0'
+                    id: 1
+                    status: ok
+                    ok: true
+                    found: true
+                    dbConnected: true
+                    message: Consulta realizada com sucesso
+                    result:
+                      cliente:
+                        nome: NOME DO CLIENTE
+                        documento: '123.456.789-00'
+                        celular: (85) 90000-0000
+                        email: cliente@exemplo.com
+                      resumo:
+                        QtdTitulos: 25
+                        QtdEmAberto: 3
+                        QtdVencidos: 1
+                        TotalEmAberto: 310.50
+                        TotalEmAbertoComJuros: 322.77
+                        MaiorAtrasoEmAberto: 30
+                        PercPagosEmDia: 63.6
+                      titulos: []
+                    timestamp: '2026-09-02T19:10:39.434Z'
+                naoEncontrado:
+                  summary: Não encontrou
+                  value:
+                    jsonrpc: '2.0'
+                    id: 1
+                    status: not_found
+                    ok: true
+                    found: false
+                    dbConnected: true
+                    message: Nenhum registro encontrado para os parametros informados
+                    result: null
+                    timestamp: '2026-09-02T19:10:39.434Z'
+        '400':
+          description: Parâmetro ausente ou malformado. O banco não foi consultado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaFalha'
+              example:
+                jsonrpc: '2.0'
+                id: 1
+                status: invalid_params
+                ok: false
+                found: false
+                dbConnected: true
+                message: 'param "documento" obrigatorio: CPF (11 digitos) ou CNPJ (14 digitos)'
+                result: null
+                error:
+                  code: -32602
+                  message: 'param "documento" obrigatorio: CPF (11 digitos) ou CNPJ (14 digitos)'
+        '401':
+          description: Chave ausente ou inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaFalha'
+              example:
+                jsonrpc: '2.0'
+                id: null
+                status: unauthorized
+                ok: false
+                found: false
+                dbConnected: true
+                message: API key ausente ou invalida. Envie o header X-API-Key.
+                result: null
+                error:
+                  code: -32001
+                  message: API key ausente ou invalida. Envie o header X-API-Key.
+        '404':
+          description: Método não existe. Os disponíveis vêm em `error.detail`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaFalha'
+        '429':
+          description: |
+            Limite por minuto ou quota diária da chave atingidos.
+            O cabeçalho `Retry-After` informa em quantos segundos tentar de novo.
+          headers:
+            Retry-After:
+              schema: { type: integer }
+              description: Segundos até a janela liberar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaFalha'
+              example:
+                jsonrpc: '2.0'
+                id: 1
+                status: rate_limited
+                ok: false
+                found: false
+                dbConnected: true
+                message: Limite de requisicoes atingido para esta chave. Aguarde antes de tentar novamente.
+                result: null
+                error:
+                  code: -32020
+                  message: Limite de requisicoes atingido para esta chave.
+        '502':
+          description: |
+            Conectou ao banco, mas a consulta não pôde ser concluída.
+            Repetir não adianta — o erro está na consulta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaFalha'
+        '503':
+          description: |
+            Não houve conexão com o banco. Nenhuma consulta foi executada.
+            Falha temporária: vale repetir depois de alguns segundos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaFalha'
+              example:
+                jsonrpc: '2.0'
+                id: 1
+                status: db_unavailable
+                ok: false
+                found: false
+                dbConnected: false
+                message: >-
+                  Nao houve conexao efetiva com o banco de dados. Nenhuma consulta
+                  foi executada. Tente novamente em instantes.
+                result: null
+                error:
+                  code: -32010
+                  message: Nao houve conexao efetiva com o banco de dados.
+
+  /methods:
+    get:
+      tags: [Serviço]
+      summary: Catálogo dos métodos disponíveis
+      operationId: listarMetodos
+      responses:
+        '200':
+          description: Métodos, com parâmetros e descrição.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  methods:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        description: { type: string }
+                        params: { type: object, additionalProperties: { type: string } }
+        '401':
+          description: Chave ausente ou inválida.
+
+  /chaves:
+    get:
+      tags: [Serviço]
+      summary: Situação e consumo da chave
+      description: |
+        Estado ao vivo, medido no processo em execução. Uma chave comum enxerga
+        apenas a si mesma, o que permite acompanhar o próprio consumo sem
+        depender de terceiros; uma chave marcada como administrativa enxerga o
+        catálogo inteiro. O valor das chaves nunca aparece na resposta.
+      operationId: consultarChaves
+      responses:
+        '200':
+          description: Situação da chave (ou de todas, se administrativa).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  escopo:
+                    type: string
+                    enum: [propria, todas]
+                  total: { type: integer }
+                  chaves:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nome: { type: string }
+                        situacao:
+                          type: string
+                          description: valida, sem prazo, expira em N dias, expirada ou revogada.
+                        expiraEm: { type: [string, 'null'], format: date }
+                        diasRestantes: { type: [integer, 'null'] }
+                        limites:
+                          type: object
+                          description: >-
+                            Limites contratados para esta chave. Os valores do exemplo
+                            abaixo aparecem zerados de propósito — os reais constam do
+                            contrato de cada integração.
+                          properties:
+                            porMinuto: { type: integer }
+                            porDia: { type: integer }
+                        consumo:
+                          type: object
+                          properties:
+                            minuto: { type: integer }
+                            dia: { type: integer }
+                            restanteDia: { type: integer }
+                            percentualDia: { type: number }
+              example:
+                escopo: propria
+                chaves:
+                  - nome: app-parceiro
+                    situacao: valida
+                    expiraEm: '2027-09-03'
+                    diasRestantes: 365
+                    limites: { porMinuto: 0, porDia: 0 }
+                    consumo: { minuto: 3, dia: 412, restanteDia: 0, percentualDia: 2.1 }
+        '401':
+          description: Chave ausente ou inválida.
+
+  /health:
+    get:
+      tags: [Serviço]
+      summary: Estado do serviço e do banco
+      description: |
+        Responde sempre com HTTP 200 — o estado real está no campo `status`.
+        Derrubar o health check por banco indisponível esconderia que o processo
+        está vivo.
+      operationId: verificarSaude
+      security: []
+      responses:
+        '200':
+          description: Estado atual.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded]
+                  dbConnected: { type: boolean }
+                  message: { type: string }
+                  uptime:
+                    type: number
+                    description: Segundos desde o início do processo.
+                  timestamp: { type: string, format: date-time }
+                  database:
+                    type: object
+                    properties:
+                      dbConnected: { type: boolean }
+                      latencyMs:
+                        type: integer
+                        description: Ida e volta até o banco, em milissegundos.
+                      lastSuccessAt: { type: [string, 'null'], format: date-time }
+                      circuitOpen:
+                        type: boolean
+                        description: Circuito de proteção aberto após falhas seguidas.
+                      lastError: { type: [string, 'null'] }
+              example:
+                status: ok
+                dbConnected: true
+                message: Servico e banco de dados operacionais
+                uptime: 3.74
+                timestamp: '2026-09-02T21:10:17.362Z'
+                database:
+                  dbConnected: true
+                  latencyMs: 550
+                  lastSuccessAt: '2026-09-02T21:10:17.362Z'
+                  circuitOpen: false
+                  lastError: null
+
+  /ping:
+    get:
+      tags: [Serviço]
+      summary: Prova de vida, sem tocar no banco
+      operationId: ping
+      security: []
+      responses:
+        '200':
+          description: Processo no ar.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok] }
+                  uptime: { type: number }
+
+components:
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Chave estática de 64 caracteres hexadecimais, uma por integração.
+        Guardar em variável de ambiente ou cofre de segredos — nunca no
+        código-fonte nem no front-end.
+
+  schemas:
+
+    Requisicao:
+      type: object
+      required: [jsonrpc, method]
+      properties:
+        jsonrpc:
+          type: string
+          const: '2.0'
+        id:
+          type: [integer, string]
+          description: Livre. Devolvido inalterado, para correlacionar chamada e resposta.
+          default: 1
+        method:
+          type: string
+          enum: [historicoFinanceiro, buscarClienteVeiculo, getCliente]
+        params:
+          oneOf:
+            - $ref: '#/components/schemas/ParamsHistoricoFinanceiro'
+            - $ref: '#/components/schemas/ParamsBuscarClienteVeiculo'
+            - $ref: '#/components/schemas/ParamsGetCliente'
+
+    ParamsHistoricoFinanceiro:
+      type: object
+      title: historicoFinanceiro
+      required: [documento]
+      properties:
+        documento:
+          type: string
+          description: CPF (11 dígitos) ou CNPJ (14). Pontuação opcional, é normalizada.
+          examples: ['123.456.789-00', '12345678900']
+        dataInicio:
+          type: string
+          format: date
+          description: Filtra por vencimento. Ausente = sem limite.
+        dataFim:
+          type: string
+          format: date
+          description: Filtra por vencimento. Ausente = sem limite.
+        somenteBoleto:
+          type: boolean
+          default: false
+          description: Restringe a formas de pagamento com boleto.
+        detalharAgrupadas:
+          type: boolean
+          default: false
+          description: >-
+            Inclui componentes de agrupamentos como linhas informativas, marcadas
+            com ContaNoTotal false — não entram no totalizador.
+
+    ParamsBuscarClienteVeiculo:
+      type: object
+      title: buscarClienteVeiculo
+      required: [termo]
+      properties:
+        termo:
+          type: string
+          description: CPF, CNPJ ou placa. Pontuação e hífen são normalizados.
+          examples: ['ABC1D23', '123.456.789-00']
+
+    ParamsGetCliente:
+      type: object
+      title: getCliente
+      required: [codCliente]
+      properties:
+        codCliente:
+          type: integer
+          minimum: 1
+          description: CodCliente do ServiceERP.
+          examples: [25136]
+
+    Envelope:
+      type: object
+      description: Formato comum a toda resposta, em sucesso ou falha.
+      required: [jsonrpc, status, ok, found, dbConnected, message, result, timestamp]
+      properties:
+        jsonrpc:
+          type: string
+          const: '2.0'
+          description: >-
+            Presente apenas nas respostas do serviço. Sua ausência indica que a
+            resposta veio da infraestrutura, não da aplicação.
+        id:
+          type: [integer, string, 'null']
+        status:
+          type: string
+          enum: [ok, not_found, invalid_params, unauthorized, rate_limited, method_not_found, db_unavailable, query_failed]
+          description: Campo de decisão. Ler este, não o código HTTP.
+        ok:
+          type: boolean
+          description: Requisição processada sem falha, mesmo que nada tenha sido encontrado.
+        found:
+          type: boolean
+          description: Veio dado do banco.
+        dbConnected:
+          type: boolean
+          description: Houve conexão efetiva com o banco nesta requisição.
+        message:
+          type: string
+          description: Texto pronto para exibir ao usuário final.
+        result:
+          type: [object, 'null']
+        timestamp:
+          type: string
+          format: date-time
+
+    RespostaSucesso:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            status:
+              type: string
+              enum: [ok, not_found]
+            ok:
+              type: boolean
+              const: true
+
+    RespostaFalha:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [error]
+          properties:
+            ok:
+              type: boolean
+              const: false
+            error:
+              type: object
+              required: [code, message]
+              properties:
+                code:
+                  type: integer
+                  description: |
+                    -32001 unauthorized · -32010 db_unavailable · -32011 query_failed
+                    -32020 rate_limited · -32601 method_not_found · -32602 invalid_params
+                  enum: [-32001, -32010, -32011, -32020, -32601, -32602]
+                message:
+                  type: string
+                detail:
+                  type: string
+                  description: >-
+                    Informação adicional sobre a falha. Pode não estar presente.
