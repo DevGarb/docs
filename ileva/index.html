@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API ILEVA — Financeiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground:      #F5F7F7;
+    --surface:     #FFFFFF;
+    --surface-alt: #EDF1F1;
+    --line:        #D3DBDC;
+    --line-soft:   #E4EAEA;
+    --ink:         #10171A;
+    --ink-mid:     #47565D;
+    --ink-soft:    #6B7C84;
+    --accent:      #A2551A;
+    --accent-soft: #F0E2D5;
+
+    --ok:         #17694A;
+    --ok-bg:      #DFEDE6;
+    --warn:       #8A6410;
+    --warn-bg:    #F3E9D2;
+    --crit:       #A33526;
+    --crit-bg:    #F4DFDB;
+    --neutral:    #566268;
+    --neutral-bg: #E5E9EA;
+
+    --sans:  "Poppins", sans-serif;
+    --serif: "Poppins", sans-serif;
+    --mono:  "Poppins", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0D1214;
+      --surface:     #151B1E;
+      --surface-alt: #1B2327;
+      --line:        #2A343A;
+      --line-soft:   #212A2E;
+      --ink:         #E7ECED;
+      --ink-mid:     #A5B3B9;
+      --ink-soft:    #7E8D94;
+      --accent:      #D8874A;
+      --accent-soft: #33241A;
+
+      --ok:         #6BC49A;
+      --ok-bg:      #163026;
+      --warn:       #D9B15E;
+      --warn-bg:    #322915;
+      --crit:       #E28C7E;
+      --crit-bg:    #35201D;
+      --neutral:    #94A3A9;
+      --neutral-bg: #222B2F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0D1214;
+    --surface:     #151B1E;
+    --surface-alt: #1B2327;
+    --line:        #2A343A;
+    --line-soft:   #212A2E;
+    --ink:         #E7ECED;
+    --ink-mid:     #A5B3B9;
+    --ink-soft:    #7E8D94;
+    --accent:      #D8874A;
+    --accent-soft: #33241A;
+
+    --ok:         #6BC49A;
+    --ok-bg:      #163026;
+    --warn:       #D9B15E;
+    --warn-bg:    #322915;
+    --crit:       #E28C7E;
+    --crit-bg:    #35201D;
+    --neutral:    #94A3A9;
+    --neutral-bg: #222B2F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 1140px; margin: 0 auto; padding: 0 28px 96px; }
+
+  /* ---------- cabeçalho ---------- */
+
+  header.masthead { padding: 58px 0 0; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 4.6vw, 3.05rem);
+    line-height: 1.08;
+    letter-spacing: -.021em;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+
+  .lede {
+    font-size: 1.075rem;
+    line-height: 1.6;
+    color: var(--ink-mid);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  table, .metric-value, .status-strip, code {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .status-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 26px;
+    margin-top: 28px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .status-strip b { color: var(--ink); font-weight: 500; }
+
+  /* ---------- alternador de visão ---------- */
+
+  .views {
+    display: flex;
+    gap: 26px;
+    margin-top: 34px;
+    border-bottom: 1px solid var(--line);
+  }
+  .views button {
+    appearance: none;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 9px 0 11px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .views button:hover { color: var(--ink); }
+  .views button[aria-selected="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+  .views button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- layout ---------- */
+
+  .shell {
+    display: grid;
+    grid-template-columns: 194px minmax(0, 1fr);
+    gap: 60px;
+    align-items: start;
+  }
+
+  nav.toc { position: sticky; top: 26px; padding-top: 46px; font-size: 13.5px; }
+  nav.toc p {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+  }
+  nav.toc ol {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  nav.toc a {
+    display: block;
+    padding: 4px 0 4px 10px;
+    color: var(--ink-mid);
+    text-decoration: none;
+    border-left: 2px solid var(--line);
+    transition: color .15s, border-color .15s;
+  }
+  nav.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  main { padding-top: 46px; min-width: 0; }
+
+  section { margin-bottom: 66px; scroll-margin-top: 24px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.62rem;
+    letter-spacing: -.014em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 36px 0 10px;
+  }
+
+  .section-note { color: var(--ink-mid); max-width: 66ch; margin: 0 0 26px; }
+
+  p { max-width: 66ch; }
+  a { color: var(--accent); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .875em;
+    background: var(--surface-alt);
+    border-radius: 3px;
+    padding: .12em .38em;
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 12.9px;
+    line-height: 1.75;
+    font-variant-numeric: tabular-nums;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 18px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .tok-key { color: var(--accent); }
+  .tok-str { color: var(--ok); }
+  .tok-num { color: var(--ink-mid); }
+  .tok-com { color: var(--ink-soft); font-style: italic; }
+
+  /* ---------- diagrama ---------- */
+
+  .flow {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px 20px 18px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .flow svg { display: block; min-width: 620px; width: 100%; height: auto; }
+
+  /* ---------- tabelas ---------- */
+
+  .table-wrap { overflow-x: auto; margin-bottom: 20px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.6px; }
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 0 14px 9px 0;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 11px 14px 11px 0;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--ink-mid);
+  }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 2.5px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .pill.ok      { color: var(--ok);      background: var(--ok-bg); }
+  .pill.warn    { color: var(--warn);    background: var(--warn-bg); }
+  .pill.crit    { color: var(--crit);    background: var(--crit-bg); }
+  .pill.neutral { color: var(--neutral); background: var(--neutral-bg); }
+
+  /* ---------- métodos ---------- */
+
+  .method { border-top: 2px solid var(--ink); padding-top: 16px; margin-bottom: 40px; }
+  .method-name { font-family: var(--mono); font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  .method-desc { color: var(--ink-mid); margin: 0 0 18px; max-width: 66ch; }
+
+  dl.params {
+    display: grid;
+    grid-template-columns: minmax(140px, auto) 1fr;
+    gap: 9px 20px;
+    margin: 0 0 20px;
+    font-size: 13.6px;
+    align-items: baseline;
+  }
+  dl.params dt { font-family: var(--mono); font-size: 12.6px; color: var(--ink); }
+  dl.params dd { margin: 0; color: var(--ink-mid); }
+  .req {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-left: 6px;
+  }
+
+  /* ---------- destaques ---------- */
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: 15px 18px;
+    margin: 0 0 22px;
+    font-size: 14.2px;
+  }
+  .callout p { margin: 0; max-width: 64ch; }
+  .callout p + p { margin-top: 9px; }
+  .callout.warn { border-left-color: var(--crit); }
+
+  .field-list { display: grid; gap: 0; margin: 0 0 22px; font-size: 13.8px; }
+  .field-row {
+    display: grid;
+    grid-template-columns: minmax(112px, auto) 1fr;
+    gap: 18px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: baseline;
+  }
+  .field-row:last-child { border-bottom: none; }
+  .field-row span:first-child { font-family: var(--mono); font-size: 12.6px; }
+  .field-row span:last-child { color: var(--ink-mid); }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+  .metric { background: var(--surface); padding: 15px 17px; }
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 5px;
+  }
+  .metric-value {
+    font-family: var(--mono);
+    font-size: 1.28rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    margin: 0;
+  }
+  .metric-value em { font-style: normal; font-size: .78rem; color: var(--ink-soft); }
+
+  /* ---------- montador de requisição ---------- */
+
+  .builder {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 26px;
+  }
+
+  .builder-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 16px;
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-alt);
+  }
+  .builder-head strong { font-size: 13.5px; font-weight: 600; }
+  .builder-head span {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+
+  .builder-body {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  }
+
+  .builder-form {
+    padding: 18px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+  }
+  .field .hint {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .field input[type="text"],
+  .field select {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 7px 9px;
+  }
+  .field input[type="text"]:focus,
+  .field select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-mid);
+    cursor: pointer;
+  }
+  .check input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+  .builder-out { display: flex; flex-direction: column; min-width: 0; }
+
+  .langs {
+    display: flex;
+    gap: 2px;
+    padding: 10px 14px 0;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .langs button {
+    appearance: none;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 6px 10px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .langs button:hover { color: var(--ink); }
+  .langs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .langs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .out-wrap { position: relative; flex: 1; min-width: 0; }
+  .out-wrap pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--surface);
+    height: 100%;
+    min-height: 232px;
+  }
+
+  .copy {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    appearance: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mid);
+    background: var(--ground);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 4px 9px;
+    cursor: pointer;
+  }
+  .copy:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .endpoint-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 13.5px;
+  }
+  .endpoint-row:last-child { border-bottom: none; }
+  .endpoint-row code { word-break: break-all; }
+
+  footer.foot {
+    border-top: 1px solid var(--line);
+    padding-top: 22px;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  footer.foot p { max-width: 66ch; }
+
+  @media (max-width: 1000px) {
+    .builder-body { grid-template-columns: 1fr; }
+    .builder-form { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: 1fr; gap: 0; }
+    nav.toc {
+      position: static;
+      padding: 30px 0 22px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    nav.toc ol { flex-direction: row; flex-wrap: wrap; gap: 4px 18px; }
+    nav.toc a { border-left: none; padding-left: 0; }
+    main { padding-top: 34px; }
+    header.masthead { padding-top: 42px; }
+    dl.params { grid-template-columns: 1fr; gap: 3px; }
+    dl.params dd { margin-bottom: 10px; }
+    .views { gap: 18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">API ILEVA · financeiro do associado</p>
+    <h1>Integração Financeira ILEVA</h1>
+    <p class="lede">
+      Como consumir o módulo financeiro da API ILEVA: boletos em aberto, linha digitável,
+      código de barras, PIX copia-e-cola, PDF do boleto e histórico de pagamentos.
+    </p>
+    <div class="status-strip">
+      <span>Protocolo <b>REST · JSON</b></span>
+      <span>Autenticação <b>app_key + Bearer</b></span>
+      <span>Testado em produção <b>16/10/2026</b></span>
+    </div>
+  </header>
+
+  <div class="shell">
+
+    <nav class="toc">
+      <p>Nesta página</p>
+      <ol>
+        <li><a href="#visao">Visão geral</a></li>
+        <li><a href="#credenciais">Credenciais</a></li>
+        <li><a href="#autenticacao">Autenticação</a></li>
+        <li><a href="#principal">Boletos + PIX</a></li>
+        <li><a href="#listar">Histórico</a></li>
+        <li><a href="#associado">Cadastro</a></li>
+        <li><a href="#barcode">Código de barras</a></li>
+        <li><a href="#pix">PIX</a></li>
+        <li><a href="#pdf">PDF e página</a></li>
+        <li><a href="#campos">Dicionário</a></li>
+        <li><a href="#fluxos">Fluxos</a></li>
+        <li><a href="#limites">Atenção</a></li>
+      </ol>
+    </nav>
+
+    <main>
+
+      <!-- ---------- 1. visão geral ---------- -->
+      <section id="visao">
+        <h2>Visão geral</h2>
+        <p class="section-note">
+          Todo o financeiro do associado vive na API ILEVA. A partir do CPF do cliente, dois
+          endpoints cobrem quase tudo; um terceiro traz o histórico de pagamento.
+        </p>
+
+<pre><code>CPF do cliente
+      │
+      ├─ GET /associado/buscar?cpf_cnpj=&lt;CPF&gt;              → cod_associado, cadastro, veículos
+      │
+      └─ GET /cobranca/listar-associado-veiculo?cpf=&lt;CPF&gt;  → boletos + PIX + linha digitável + PDF
+                                                             <span class="tok-com">(endpoint principal: payload completo)</span>
+            │
+            └─ GET /cobranca/listar?cod_associado=&amp;situacao=Liquidado  → histórico de pagamento</code></pre>
+
+        <p>
+          Todos os endpoints, parâmetros e payloads desta página foram testados em produção em
+          16/10/2026 via Postman.
+        </p>
+      </section>
+
+      <!-- ---------- 2. credenciais ---------- -->
+      <section id="credenciais">
+        <h2>Credenciais</h2>
+        <p class="section-note">
+          Três valores, fornecidos pela equipe responsável pela integração. Nenhum deles
+          aparece nesta página.
+        </p>
+
+        <div class="field-list">
+          <div class="field-row"><span>Base URL</span><span><code>https://api.ileva.com.br</code></span></div>
+          <div class="field-row"><span>app_key</span><span>Header fixo por conta, enviado em <b>todas</b> as chamadas — inclusive na autenticação.</span></div>
+          <div class="field-row"><span>username / password</span><span>Usuário dedicado da integração, usado só em <code>POST /oauth/token</code>.</span></div>
+        </div>
+
+        <div class="callout">
+          <p>
+            <b>Token e app_key andam juntos.</b> O token obtido com um <code>app_key</code> só é
+            válido em chamadas que enviem esse mesmo <code>app_key</code>.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <p>
+            Guarde as credenciais em variável de ambiente ou cofre de segredos. Nunca no
+            código-fonte, no front-end ou em repositório.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- 3. autenticação ---------- -->
+      <section id="autenticacao">
+        <h2>Autenticação</h2>
+        <p class="section-note"><code>POST /oauth/token</code> devolve um Bearer token.</p>
+
+<pre><code>curl -X POST "https://api.ileva.com.br/oauth/token" \
+  -H "app_key: $ILEVA_APP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"'"$ILEVA_USERNAME"'","password":"'"$ILEVA_PASSWORD"'"}'</code></pre>
+
+<pre><code>{ <span class="tok-key">"access_token"</span>: <span class="tok-str">"eyJhbGciOi..."</span>, <span class="tok-key">"token_type"</span>: <span class="tok-str">"Bearer"</span>, <span class="tok-key">"expires_in"</span>: <span class="tok-num">86400</span> }</code></pre>
+
+        <p>Headers em <b>toda</b> chamada seguinte:</p>
+
+<pre><code>Authorization: Bearer &lt;access_token&gt;
+app_key: &lt;APP_KEY&gt;</code></pre>
+
+        <h3>Comportamento do token</h3>
+        <p>
+          Declara <code>expires_in: 86400</code> (24h) e no teste de 16/10/2026 aceitou 6
+          chamadas seguidas com o mesmo token. Porém a API <b>invalida tokens de forma
+          imprevisível</b>: uma chamada voltou <code>{"status":401,"mensagem":"Token..."}</code>
+          e a chamada idêntica seguinte, com token novo, funcionou. Historicamente o
+          comportamento era de 1 token = 1 chamada.
+        </p>
+
+        <div class="callout">
+          <p>
+            <b>Recomendação.</b> Não confiar em cache de token. Gerar sob demanda e tratar
+            <code>401</code> com retry automático: gerar token novo e repetir a requisição uma
+            vez. Em lote, gerar um token por item em vez de compartilhar um só.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- 4. endpoint principal ---------- -->
+      <section id="principal">
+        <h2>Boletos + PIX</h2>
+        <p class="section-note">
+          <code>GET /cobranca/listar-associado-veiculo</code> — o endpoint principal. Boleto,
+          PIX, linha digitável, PDF, dados do associado e veículos num payload só.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Parâmetro</th><th>Obrigatório</th><th>Observação</th></tr></thead>
+            <tbody>
+              <tr><td><code>inicio_paginacao</code></td><td><span class="pill warn">sim</span></td><td>Offset. Sem ele: <code>400 "Por favor informe o inicio da paginação"</code>.</td></tr>
+              <tr><td><code>quantidade_por_pagina</code></td><td><span class="pill warn">sim</span></td><td>Até 500–600.</td></tr>
+              <tr><td><code>cod_associado</code></td><td>—</td><td><span class="pill ok">funciona</span></td></tr>
+              <tr><td><code>cpf</code></td><td>—</td><td><span class="pill ok">funciona</span> CPF só dígitos.</td></tr>
+              <tr><td><code>placa</code></td><td>—</td><td><span class="pill ok">funciona</span></td></tr>
+              <tr><td><code>situacao</code></td><td>—</td><td><span class="pill crit">ignorado</span> <code>Liquidado</code> devolveu os mesmos registros abertos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          Pelo menos um filtro é obrigatório — sem nenhum, volta
+          <code>400 "Pelo menos um parâmetro dever ser informado"</code>. Para filtrar por
+          situação, filtre no cliente ou use <a href="#listar"><code>/cobranca/listar</code></a>.
+        </p>
+
+<pre><code>curl "https://api.ileva.com.br/cobranca/listar-associado-veiculo?inicio_paginacao=0&amp;quantidade_por_pagina=100&amp;cpf=00000000000" \
+  -H "app_key: $ILEVA_APP_KEY" -H "Authorization: Bearer $TOKEN"</code></pre>
+
+        <h3>Resposta</h3>
+<pre><code>{
+  <span class="tok-key">"total_encontrados"</span>: <span class="tok-num">13</span>,
+  <span class="tok-key">"boletos"</span>: [{
+    <span class="tok-key">"cod_cobranca"</span>: <span class="tok-num">100001</span>,
+    <span class="tok-key">"linha_digitavel"</span>: <span class="tok-str">"75691.23453 00000.123455 67890.000176 1 16210000012359"</span>,
+    <span class="tok-key">"apresentar_boleto"</span>: <span class="tok-num">1</span>,
+    <span class="tok-key">"valor_boleto"</span>: <span class="tok-str">"123.59"</span>,
+    <span class="tok-key">"valor_pagamento"</span>: <span class="tok-str">"0.00"</span>,
+    <span class="tok-key">"referencia"</span>: <span class="tok-str">"2026-10"</span>,
+    <span class="tok-key">"dt_vencimento"</span>: <span class="tok-str">"2026-11-05"</span>,
+    <span class="tok-key">"dt_pagamento"</span>: <span class="tok-num">null</span>,
+    <span class="tok-key">"dt_criacao"</span>: <span class="tok-str">"2026-10-15"</span>,
+    <span class="tok-key">"situacao_boleto"</span>: <span class="tok-str">"Aberto"</span>,
+    <span class="tok-key">"nosso_numero"</span>: <span class="tok-str">"000001"</span>,
+    <span class="tok-key">"dt_vencimento_original"</span>: <span class="tok-num">null</span>,
+    <span class="tok-key">"url_boleto"</span>: <span class="tok-str">"https://&lt;conta&gt;.ileva.com.br/api/associado/boleto/&lt;hash&gt;"</span>,
+    <span class="tok-key">"url_boleto_web"</span>: <span class="tok-str">"https://&lt;conta&gt;.ileva.com.br/associado/cobranca/&lt;hash&gt;"</span>,
+    <span class="tok-key">"nome_associado"</span>: <span class="tok-str">"NOME DO ASSOCIADO"</span>,
+    <span class="tok-key">"cpf"</span>: <span class="tok-str">"00000000000"</span>,
+    <span class="tok-key">"telefone"</span>: <span class="tok-str">"85900000000"</span>,
+    <span class="tok-key">"cod_associado"</span>: <span class="tok-num">1001</span>,
+    <span class="tok-key">"situacao_associado"</span>: <span class="tok-str">"ATIVO"</span>,
+    <span class="tok-key">"tipo_boleto"</span>: <span class="tok-str">"Fechamento"</span>,
+    <span class="tok-key">"pix"</span>: <span class="tok-str">"00020101021226950014br.gov.bcb.pix2573pix.sicoob.com.br/qr/payload/v2/cobv/&lt;uuid&gt;5204000053039865802BR5909PIXSICOOB6006CIDADE62070503***6304&lt;CRC16&gt;"</span>,
+    <span class="tok-key">"veiculos"</span>: [{
+      <span class="tok-key">"cod_veiculo"</span>: <span class="tok-num">2001</span>,
+      <span class="tok-key">"placa"</span>: <span class="tok-str">"ABC1D23"</span>,
+      <span class="tok-key">"chassi"</span>: <span class="tok-str">"&lt;chassi&gt;"</span>,
+      <span class="tok-key">"ano_fabricacao"</span>: <span class="tok-num">2015</span>,
+      <span class="tok-key">"ano_modelo"</span>: <span class="tok-str">"2015-5"</span>,
+      <span class="tok-key">"dt_contrato"</span>: <span class="tok-str">"2026-10-15"</span>,
+      <span class="tok-key">"modelo"</span>: <span class="tok-str">"CG 150 START FLEXONE"</span>,
+      <span class="tok-key">"situacao_veiculo"</span>: <span class="tok-str">"ATIVO"</span>,
+      <span class="tok-key">"marca"</span>: <span class="tok-str">"Honda"</span>,
+      <span class="tok-key">"valor"</span>: <span class="tok-str">"123.59"</span>
+    }]
+  }]
+}</code></pre>
+      </section>
+
+      <!-- ---------- 5. listar ---------- -->
+      <section id="listar">
+        <h2>Histórico</h2>
+        <p class="section-note">
+          <code>GET /cobranca/listar</code> — listagem por situação. É o único que respeita
+          <code>situacao</code>, por isso é o caminho do histórico de pagamento.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Parâmetro</th><th>Obrigatório</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><code>inicio_paginacao</code></td><td><span class="pill warn">sim</span></td><td>—</td></tr>
+              <tr><td><code>quantidade_por_pagina</code></td><td><span class="pill warn">sim</span></td><td>Até 500.</td></tr>
+              <tr><td><code>cod_associado</code></td><td>—</td><td><span class="pill ok">funciona</span></td></tr>
+              <tr><td><code>cod_veiculo</code></td><td>—</td><td><span class="pill ok">funciona</span></td></tr>
+              <tr><td><code>situacao</code></td><td>—</td><td><span class="pill ok">funciona</span> <code>Aberto</code>, <code>Liquidado</code>, <code>Cancelado</code></td></tr>
+              <tr><td><code>placa</code></td><td>—</td><td><span class="pill crit">ignorado</span> devolve a base completa</td></tr>
+              <tr><td><code>referencia</code>, <code>dt_vencimento</code>, <code>dt_vencimento_de</code>/<code>_ate</code>, <code>dt_vencimento_inicio</code>/<code>_fim</code>, <code>dt_inicio</code>/<code>dt_fim</code></td><td>—</td><td><span class="pill crit">ignorados</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <p>
+            <b>Não há filtro de data em nenhum endpoint de cobrança.</b> Recorte por período
+            (ex.: "boletos de outubro") é feito no consumidor, depois de filtrar por
+            <code>cod_associado</code> ou <code>cod_veiculo</code>.
+          </p>
+        </div>
+
+        <p>
+          Alguns campos mudam de nome em relação ao <a href="#principal">endpoint principal</a>:
+          aqui é <code>valor</code> (não <code>valor_boleto</code>), <code>situacao</code> (não
+          <code>situacao_boleto</code>) e <code>associado</code> (não <code>nome_associado</code>).
+          <code>placa</code>, <code>cod_veiculo</code> e <code>cod_boleto_veiculo</code> vêm na
+          raiz, sem o array <code>veiculos</code>. Normalize os dois formatos numa camada de
+          modelo só.
+        </p>
+
+        <div class="callout warn">
+          <p>
+            <b>Não existe a situação "Vencido".</b> Boleto vencido é
+            <code>situacao = "Aberto"</code> com <code>dt_vencimento</code> anterior a hoje — o
+            cálculo do atraso é do consumidor. Valores fora da lista (<code>Vencido</code>,
+            <code>Baixado</code>) devolvem <code>total_encontrados: 0</code>.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- 6. associado ---------- -->
+      <section id="associado">
+        <h2>Cadastro</h2>
+        <p class="section-note">
+          <code>GET /associado/buscar</code> aceita <code>cod_associado</code> <b>ou</b>
+          <code>cpf_cnpj</code> (ambos validados).
+        </p>
+
+<pre><code>curl "https://api.ileva.com.br/associado/buscar?cpf_cnpj=00000000000" \
+  -H "app_key: $ILEVA_APP_KEY" -H "Authorization: Bearer $TOKEN"</code></pre>
+
+<pre><code>{ <span class="tok-key">"associado"</span>: {
+  <span class="tok-key">"nome"</span>: <span class="tok-str">"NOME DO ASSOCIADO"</span>, <span class="tok-key">"cpf"</span>: <span class="tok-str">"00000000000"</span>, <span class="tok-key">"tel_whatsapp"</span>: <span class="tok-str">"85900000000"</span>,
+  <span class="tok-key">"tel_celular"</span>: <span class="tok-num">null</span>, <span class="tok-key">"tel_comercial"</span>: <span class="tok-num">null</span>, <span class="tok-key">"dt_nascimento"</span>: <span class="tok-str">"1990-01-01"</span>,
+  <span class="tok-key">"email"</span>: <span class="tok-str">"cliente@exemplo.com"</span>, <span class="tok-key">"rg"</span>: <span class="tok-str">"0000000"</span>, <span class="tok-key">"orgao_expedidor_rg"</span>: <span class="tok-str">"SSP CE"</span>,
+  <span class="tok-key">"cnh"</span>: <span class="tok-str">"00000000000"</span>, <span class="tok-key">"categoria_cnh"</span>: <span class="tok-str">"AB"</span>, <span class="tok-key">"dt_vencimento_cnh"</span>: <span class="tok-num">null</span>,
+  <span class="tok-key">"logradouro"</span>: <span class="tok-str">"Rua Exemplo"</span>, <span class="tok-key">"bairro"</span>: <span class="tok-str">"Centro"</span>, <span class="tok-key">"numero"</span>: <span class="tok-str">"100"</span>, <span class="tok-key">"complemento"</span>: <span class="tok-str">"."</span>,
+  <span class="tok-key">"cep"</span>: <span class="tok-str">"60000-000"</span>, <span class="tok-key">"sexo"</span>: <span class="tok-str">"M"</span>, <span class="tok-key">"cod_regional"</span>: <span class="tok-num">1</span>, <span class="tok-key">"regional"</span>: <span class="tok-str">"Regional Exemplo"</span>,
+  <span class="tok-key">"cod_associado"</span>: <span class="tok-num">1001</span>, <span class="tok-key">"cidade"</span>: <span class="tok-str">"Fortaleza"</span>, <span class="tok-key">"estado"</span>: <span class="tok-str">"Ceará"</span>, <span class="tok-key">"uf"</span>: <span class="tok-str">"CE"</span>,
+  <span class="tok-key">"dt_cadastro"</span>: <span class="tok-str">"2026-10-15"</span>, <span class="tok-key">"situacao"</span>: <span class="tok-str">"ATIVO"</span>, <span class="tok-key">"situacao_tipo"</span>: <span class="tok-str">"ATIVO"</span>, <span class="tok-key">"cod_situacao"</span>: <span class="tok-num">1</span>,
+  <span class="tok-key">"cod_conta"</span>: <span class="tok-num">null</span>, <span class="tok-key">"conta_descricao"</span>: <span class="tok-num">null</span>, <span class="tok-key">"conta_beneficiario_ndoc"</span>: <span class="tok-num">null</span>,
+  <span class="tok-key">"veiculos"</span>: [{ <span class="tok-key">"placa"</span>: <span class="tok-str">"ABC1D23"</span>, <span class="tok-key">"modelo"</span>: <span class="tok-str">"CG 150 START FLEXONE"</span>, <span class="tok-key">"cod_veiculo"</span>: <span class="tok-num">2001</span>,
+                 <span class="tok-key">"situacao"</span>: <span class="tok-str">"ATIVO"</span>, <span class="tok-key">"situacao_tipo"</span>: <span class="tok-str">"ATIVO"</span>, <span class="tok-key">"cod_situacao"</span>: <span class="tok-num">1</span> }]
+} }</code></pre>
+
+        <h3>Endpoints complementares</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Endpoint</th><th>Uso</th></tr></thead>
+            <tbody>
+              <tr><td><code>GET /associado/listar</code></td><td>Paginado, até 600/página. Total em <code>total_encontrados</code>.</td></tr>
+              <tr><td><code>GET /veiculo/listar</code></td><td>Paginado, até 600/página.</td></tr>
+              <tr><td><code>GET /veiculo/buscar?cod_veiculo=</code></td><td>Veículo individual.</td></tr>
+              <tr><td><code>GET /lead/buscar?cod_lead=</code></td><td>Lead.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ---------- 7. código de barras ---------- -->
+      <section id="barcode">
+        <h2>Código de barras</h2>
+        <p class="section-note">
+          A API <b>não devolve o código de barras</b> (44 dígitos) — só a
+          <code>linha_digitavel</code> (47). A conversão é determinística e foi validada contra
+          um boleto real.
+        </p>
+
+        <h3>Layout da linha digitável</h3>
+        <p>47 dígitos, depois de remover pontos e espaços:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Posição</th><th>Conteúdo</th></tr></thead>
+            <tbody>
+              <tr><td class="num">1–3</td><td>Banco (<code>756</code> = Sicoob)</td></tr>
+              <tr><td class="num">4</td><td>Moeda (<code>9</code>)</td></tr>
+              <tr><td class="num">5–9</td><td>Campo livre (posições 20–24 do barcode)</td></tr>
+              <tr><td class="num">10</td><td>DV campo 1</td></tr>
+              <tr><td class="num">11–20</td><td>Campo livre (25–34)</td></tr>
+              <tr><td class="num">21</td><td>DV campo 2</td></tr>
+              <tr><td class="num">22–31</td><td>Campo livre (35–44)</td></tr>
+              <tr><td class="num">32</td><td>DV campo 3</td></tr>
+              <tr><td class="num">33</td><td><b>DV geral do código de barras</b></td></tr>
+              <tr><td class="num">34–37</td><td>Fator de vencimento</td></tr>
+              <tr><td class="num">38–47</td><td>Valor (centavos)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Montagem do barcode</h3>
+<pre><code>barcode = d[0:4] + d[32] + d[33:47] + d[4:9] + d[10:20] + d[21:31]
+          └banco+moeda  └DV  └fator+valor  └─── campo livre (25 díg.) ───┘</code></pre>
+
+<pre><code><span class="tok-key">def</span> linha_para_barcode(linha_digitavel: str) -&gt; str:
+    d = <span class="tok-str">""</span>.join(c <span class="tok-key">for</span> c <span class="tok-key">in</span> linha_digitavel <span class="tok-key">if</span> c.isdigit())   <span class="tok-com"># 47 digitos</span>
+    <span class="tok-key">return</span> d[0:4] + d[32] + d[33:47] + d[4:9] + d[10:20] + d[21:31]
+
+<span class="tok-key">def</span> dv_geral(barcode44: str) -&gt; int:
+    base = barcode44[:4] + barcode44[5:]        <span class="tok-com"># tira o DV da posicao 5</span>
+    pesos, soma = [2,3,4,5,6,7,8,9], 0
+    <span class="tok-key">for</span> i, c <span class="tok-key">in</span> enumerate(reversed(base)):
+        soma += int(c) * pesos[i % 8]
+    r = 11 - (soma % 11)
+    <span class="tok-key">return</span> 1 <span class="tok-key">if</span> r <span class="tok-key">in</span> (0, 1, 10, 11) <span class="tok-key">else</span> r      <span class="tok-com"># modulo 11, resto 0/1/10 -&gt; DV 1</span></code></pre>
+
+        <h3>Exemplo verificado</h3>
+<pre><code>linha  : 75691.23453 00000.123455 67890.000259 5 19250000012359
+47 dig : 75691234530000012345567890000259519250000012359
+barcode: 75695192500000123591234500000123456789000025   <span class="tok-com">(44 digitos)</span>
+DV calculado = 5   |  DV na linha = 5                      <span class="tok-str">✓</span>
+valor no barcode = 123.59                                  <span class="tok-str">✓</span>
+fator 1925 -&gt; 2027-09-05                                   <span class="tok-str">✓</span></code></pre>
+        <p style="color: var(--ink-soft); font-size: 13px;">
+          Boleto fictício com dígitos verificadores válidos — mesmo algoritmo do teste contra
+          o boleto real.
+        </p>
+
+        <div class="callout">
+          <p>
+            <b>Fator de vencimento:</b> vencimento = <b>29/05/2022 + fator</b> dias. O fator
+            reiniciou em 1000 em 22/02/2025. Com a base antiga (07/10/1997), o fator 1925 daria
+            2003 — errado.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- 8. pix ---------- -->
+      <section id="pix">
+        <h2>PIX</h2>
+        <p class="section-note">
+          O campo <code>pix</code> já vem pronto como payload EMV copia-e-cola (BR Code, Sicoob).
+        </p>
+
+<pre><code>00020101021226950014br.gov.bcb.pix2573pix.sicoob.com.br/qr/payload/v2/cobv/&lt;uuid&gt;5204000053039865802BR5909PIXSICOOB6006CIDADE62070503***6304&lt;CRC16&gt;</code></pre>
+
+        <div class="field-list">
+          <div class="field-row"><span>cobv</span><span>Cobrança com vencimento: a string <b>não carrega o valor</b> — o PSP busca pela URL. Mostre o valor na tela a partir de <code>valor_boleto</code>.</span></div>
+          <div class="field-row"><span>QR Code</span><span>Gerar no cliente, a partir da string. Não há endpoint de imagem.</span></div>
+          <div class="field-row"><span>null</span><span>Vem <code>null</code> em boletos antigos, liquidados ou cancelados. Sempre tratar.</span></div>
+        </div>
+      </section>
+
+      <!-- ---------- 9. pdf ---------- -->
+      <section id="pdf">
+        <h2>PDF e página do boleto</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Resposta (validada via HEAD)</th></tr></thead>
+            <tbody>
+              <tr><td><code>url_boleto</code></td><td><code>200</code> · <code>application/pdf</code> · <code>inline; filename=&lt;hash&gt;.pdf</code> · ~600 KB · <code>Access-Control-Allow-Origin: *</code></td></tr>
+              <tr><td><code>url_boleto_web</code></td><td><code>200</code> · <code>text/html; charset=utf-8</code> (portal do associado)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          As duas são <b>públicas, sem autenticação</b> (hash na URL). <code>url_boleto</code> tem
+          CORS liberado — dá para embutir ou baixar direto do app. Vêm <code>null</code> em
+          boletos antigos.
+        </p>
+        <div class="callout warn">
+          <p>
+            Quem tem a URL abre o boleto. Trate como dado sensível: não logar, não indexar.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---------- 10. dicionário ---------- -->
+      <section id="campos">
+        <h2>Dicionário de campos</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>/listar</th><th>/listar-associado-veiculo</th><th>Significado</th></tr></thead>
+            <tbody>
+              <tr><td><code>cod_cobranca</code></td><td>✓</td><td>✓</td><td>ID do boleto (chave)</td></tr>
+              <tr><td><code>cod_boleto_veiculo</code></td><td>✓</td><td>—</td><td>ID do vínculo boleto↔veículo</td></tr>
+              <tr><td><code>valor</code> / <code>valor_boleto</code></td><td><code>valor</code></td><td><code>valor_boleto</code></td><td>Valor do boleto (string decimal)</td></tr>
+              <tr><td><code>valor_pagamento</code></td><td>✓</td><td>✓</td><td>Valor pago (<code>"0.00"</code> se em aberto)</td></tr>
+              <tr><td><code>situacao</code> / <code>situacao_boleto</code></td><td><code>situacao</code></td><td><code>situacao_boleto</code></td><td><code>Aberto</code> / <code>Liquidado</code> / <code>Cancelado</code></td></tr>
+              <tr><td><code>referencia</code></td><td>✓</td><td>✓</td><td>Competência <code>AAAA-MM</code> (pode ser <code>null</code>)</td></tr>
+              <tr><td><code>dt_vencimento</code></td><td>✓</td><td>✓</td><td>Vencimento vigente</td></tr>
+              <tr><td><code>dt_vencimento_original</code></td><td>✓</td><td>✓</td><td>Vencimento antes de prorrogação (<code>null</code> se não houve)</td></tr>
+              <tr><td><code>dt_pagamento</code></td><td>✓</td><td>✓</td><td><code>null</code> enquanto em aberto</td></tr>
+              <tr><td><code>dt_criacao</code></td><td>—</td><td>✓</td><td>Emissão</td></tr>
+              <tr><td><code>linha_digitavel</code></td><td>✓</td><td>✓</td><td>47 díg. formatados (<code>null</code> em boleto antigo)</td></tr>
+              <tr><td><code>pix</code></td><td>✓</td><td>✓</td><td>BR Code copia-e-cola (<code>null</code> em boleto antigo)</td></tr>
+              <tr><td><code>nosso_numero</code></td><td>✓</td><td>✓</td><td>Identificação bancária</td></tr>
+              <tr><td><code>tipo_boleto</code></td><td>✓</td><td>✓</td><td><code>Fechamento</code>, <code>Adesão</code>, <code>Carência Plano Bateria</code>, …</td></tr>
+              <tr><td><code>apresentar_boleto</code></td><td>✓</td><td>✓</td><td>Flag <code>1</code>/<code>0</code> — <b>exibir só quando <code>1</code></b></td></tr>
+              <tr><td><code>url_boleto</code> / <code>url_boleto_web</code></td><td>✓</td><td>✓</td><td>PDF / página</td></tr>
+              <tr><td><code>associado</code> / <code>nome_associado</code></td><td><code>associado</code></td><td><code>nome_associado</code></td><td>Nome</td></tr>
+              <tr><td><code>cpf</code>, <code>telefone</code>, <code>situacao_associado</code></td><td>—</td><td>✓</td><td>Dados do cliente</td></tr>
+              <tr><td><code>placa</code>, <code>cod_veiculo</code></td><td>raiz</td><td>em <code>veiculos[]</code></td><td>Veículo</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ---------- 11. fluxos ---------- -->
+      <section id="fluxos">
+        <h2>Fluxos recomendados</h2>
+
+        <h3>Boletos em aberto</h3>
+<pre><code>1. CPF do cliente (cadastro/login do app)
+2. GET /cobranca/listar-associado-veiculo?inicio_paginacao=0&amp;quantidade_por_pagina=100&amp;cpf=&lt;CPF&gt;
+3. filtrar no cliente: situacao_boleto == "Aberto" &amp;&amp; apresentar_boleto == 1
+4. ordenar por dt_vencimento asc; marcar vencido = dt_vencimento &lt; hoje
+5. por boleto exibir: valor_boleto, dt_vencimento, linha_digitavel (copiar),
+   barcode44 (para o widget de código de barras), pix (copiar / QR), url_boleto (PDF)</code></pre>
+
+        <h3>Histórico de pagamentos</h3>
+<pre><code>1. GET /associado/buscar?cpf_cnpj=&lt;CPF&gt;  -&gt;  cod_associado
+2. GET /cobranca/listar?inicio_paginacao=0&amp;quantidade_por_pagina=500&amp;cod_associado=&lt;ID&gt;&amp;situacao=Liquidado
+3. ordenar por dt_pagamento desc; exibir valor, valor_pagamento, dt_vencimento, dt_pagamento, referencia
+   (desconto/acréscimo = valor_pagamento - valor)</code></pre>
+
+        <h3>Financeiro por veículo</h3>
+<pre><code>1. GET /associado/buscar?cpf_cnpj=&lt;CPF&gt;  -&gt;  veiculos[].cod_veiculo / placa
+2. GET /cobranca/listar-associado-veiculo?inicio_paginacao=0&amp;quantidade_por_pagina=100&amp;placa=&lt;PLACA&gt;
+   (ou GET /cobranca/listar?inicio_paginacao=0&amp;quantidade_por_pagina=500&amp;cod_veiculo=&lt;ID&gt;)</code></pre>
+      </section>
+
+      <!-- ---------- 12. limitações ---------- -->
+      <section id="limites">
+        <h2>Limitações e pontos de atenção</h2>
+        <div class="field-list">
+          <div class="field-row"><span>Sem filtro de data</span><span>Nenhum endpoint de cobrança filtra por data — paginar e cortar no consumidor.</span></div>
+          <div class="field-row"><span>placa</span><span>Ignorado em <code>/cobranca/listar</code>; funciona em <code>/listar-associado-veiculo</code>.</span></div>
+          <div class="field-row"><span>situacao</span><span>Ignorado em <code>/listar-associado-veiculo</code>; funciona em <code>/cobranca/listar</code>.</span></div>
+          <div class="field-row"><span>Nomes de campo</span><span>Mudam entre os dois endpoints (<code>valor</code>↔<code>valor_boleto</code>, <code>situacao</code>↔<code>situacao_boleto</code>, <code>associado</code>↔<code>nome_associado</code>) — normalizar numa camada só.</span></div>
+          <div class="field-row"><span>Token</span><span>Pode invalidar a qualquer momento — retry em <code>401</code> com token novo.</span></div>
+          <div class="field-row"><span>Código de barras</span><span>Não vem na API — derivar da linha digitável.</span></div>
+          <div class="field-row"><span>null</span><span>Em <code>pix</code>, <code>linha_digitavel</code> e <code>url_boleto</code> para boletos antigos ou cancelados.</span></div>
+          <div class="field-row"><span>"Vencido"</span><span>Não existe — calcular por <code>dt_vencimento</code>.</span></div>
+          <div class="field-row"><span>total_encontrados</span><span>Total <b>após</b> filtros; usar para paginar.</span></div>
+          <div class="field-row"><span>URLs de boleto</span><span>Públicas por hash — dado sensível, não logar nem indexar.</span></div>
+          <div class="field-row"><span>Paginação</span><span>Limite varia: 500 em cobrança, 600 em <code>associado/listar</code> e <code>veiculo/listar</code>, 300 em <code>alteracoes-situacao</code>.</span></div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p>
+          Documento de 16/10/2026. Endpoints e payloads conferidos em produção na mesma data.
+          Dados pessoais, identificadores e boletos dos exemplos são fictícios. Credenciais de
+          acesso: solicitar à equipe responsável pela integração.
+        </p>
+      </footer>
+
+    </main>
+  </div>
+</div>
+</body>
+</html>

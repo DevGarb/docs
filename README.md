@@ -5,6 +5,7 @@ Documentação pública das APIs e serviços. Publicada via GitHub Pages em http
 | Projeto | Documentação | Especificação |
 |---|---|---|
 | integration_app_db | [Referência da API](https://devgarb.github.io/docs/integration_app_db/) | [openapi.yaml](integration_app_db/openapi.yaml) |
+| ileva | [API ILEVA — Financeiro](https://devgarb.github.io/docs/ileva/) | — |
 
 ## Adicionar uma documentação
 
